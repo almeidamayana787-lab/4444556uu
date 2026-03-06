@@ -23,6 +23,7 @@ class DepositController extends Controller
      */
     public function submitPayment(Request $request)
     {
+        dd("HIT SUBMIT PAYMENT", $request->all());
         Log::info('[DepositController] submitPayment chamado', ['gateway' => $request->gateway, 'all' => $request->all()]);
 
         $result = null;
