@@ -302,7 +302,8 @@ class GamesKeyPage extends Page implements HasForms
                     ->body('Informações enviadas para a PlayFiver com sucesso!')
                     ->success()
                     ->send();
-                return redirect("/admin/chaves-dos-jogos");
+                $this->redirect("/admin/chaves-dos-jogos");
+                return;
             }
 
             Notification::make()
