@@ -65,7 +65,7 @@ class DistributionController extends Controller
                 $this->updateRTP($distribution->rtp_distribuicao);
             }
             // Se a meta não foi atingida, não atualizamos o RTP
-        } 
+        }
         // 5. Lógica de Distribuição
         elseif ($distribution->modo === 'distribuicao') {
             // Soma as wins desde o início do ciclo
@@ -100,7 +100,7 @@ class DistributionController extends Controller
     }
 
     /**
-     * Atualiza o RTP na PlayFiver
+     * Atualiza o RTP na API atualmente ativa (PlayFiver ou Max API Games)
      */
     private function updateRTP($rtp)
     {
@@ -109,17 +109,50 @@ class DistributionController extends Controller
             Log::warning('GamesKey não encontrado. Não foi possível atualizar RTP.');
             return;
         }
-    
-        try {
-            Http::withOptions(['force_ip_resolve' => 'v4'])
-                ->put('https://api.playfivers.com/api/v2/agent', [
-                    'agentToken'   => $setting->playfiver_token,
-                    'secretKey'    => $setting->playfiver_secret,
-                    'rtp'          => $rtp, // Utiliza o valor passado como parâmetro
-                    'bonus_enable' => true,
+
+        $activeApi = $setting->active_api ?? 'playfiver';
+
+        if ($activeApi === 'playfiver') {
+            try {
+                Http::withOptions(['force_ip_resolve' => 'v4'])
+                    ->put('https://api.playfivers.com/api/v2/agent', [
+                        'agentToken' => $setting->playfiver_token,
+                        'secretKey' => $setting->playfiver_secret,
+                        'rtp' => $rtp,
+                        'limit_enable' => $setting->pf_limit_enable ?? false,
+                        'limite_amount' => $setting->pf_limit_amount ?? 0,
+                        'limit_hours' => $setting->pf_limit_hours ?? 0,
+                        'bonus_enable' => $setting->pf_bonus_enable ?? true,
+                    ]);
+
+                // Atualiza localmente
+                $setting->update(['pf_rtp' => $rtp]);
+            } catch (\Exception $e) {
+                Log::error('Erro ao atualizar RTP PlayFiver: ' . $e->getMessage());
+            }
+        } elseif ($activeApi === 'max_api') {
+            try {
+                // Atualiza configurações base do agente
+                Http::post('https://maxapigames.com/api/v2', [
+                    'method' => 'agent_update',
+                    'agent_code' => $setting->max_code,
+                    'agent_token' => $setting->max_token,
+                    'rtp' => $rtp,
                 ]);
-        } catch (\Exception $e) {
-            Log::error('Erro ao atualizar RTP: ' . $e->getMessage());
+
+                // Efetiva a alteração do RTP global
+                Http::post('https://maxapigames.com/api/v2', [
+                    'method' => 'control_rtp',
+                    'agent_code' => $setting->max_code,
+                    'agent_token' => $setting->max_token,
+                    'rtp' => $rtp,
+                ]);
+
+                // Atualiza localmente
+                $setting->update(['max_rtp' => $rtp]);
+            } catch (\Exception $e) {
+                Log::error('Erro ao atualizar RTP Max API Games: ' . $e->getMessage());
+            }
         }
     }
 }
