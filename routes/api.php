@@ -124,11 +124,15 @@ Route::group(['middleware' => ['auth.jwt']], function () {
             include_once(__DIR__ . '/groups/api/profile/vip.php');
         });
 
-    Route::prefix('carteira_wallet')
-        ->group(function () {
-            include_once(__DIR__ . '/groups/api/wallet/deposit.php');
-            include_once(__DIR__ . '/groups/api/wallet/withdraw.php');
-        });
+});
+
+Route::prefix('carteira_wallet')
+    ->group(function () {
+        include_once(__DIR__ . '/groups/api/wallet/deposit.php');
+        include_once(__DIR__ . '/groups/api/wallet/withdraw.php');
+    });
+
+Route::group(['middleware' => ['auth.jwt']], function () {
 });
 
 
