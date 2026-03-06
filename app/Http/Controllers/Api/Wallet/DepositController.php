@@ -23,19 +23,34 @@ class DepositController extends Controller
      */
     public function submitPayment(Request $request)
     {
+        Log::info('[DepositController] submitPayment chamado', ['gateway' => $request->gateway, 'all' => $request->all()]);
+
+        $result = null;
         switch ($request->gateway) {
             case 'suitpay':
                 // Redirecionamento forcado de Suitpay para GGPIX
-                return self::requestQrcodeGgpix($request);
+                $result = self::requestQrcodeGgpix($request);
+                break;
             case 'ezzepay':
-                return self::requestQrcodeEzze($request);
+                $result = self::requestQrcodeEzze($request);
+                break;
             case 'digitopay':
-                return self::requestQrcodeDigito($request);
+                $result = self::requestQrcodeDigito($request);
+                break;
             case 'ggpix':
-                return self::requestQrcodeGgpix($request);
+                $result = self::requestQrcodeGgpix($request);
+                break;
             case 'bspay':
-                return self::requestQrcodeBsPay($request);
+                $result = self::requestQrcodeBsPay($request);
+                break;
+            default:
+                Log::warning('[DepositController] Nenhum gateway correspondente', ['gateway' => $request->gateway]);
+                // Se o gateway for vazio, vamos tentar usar GGPIX como padrão para não quebrar
+                $result = self::requestQrcodeGgpix($request);
+                break;
         }
+
+        return response()->json($result);
     }
 
     /**
