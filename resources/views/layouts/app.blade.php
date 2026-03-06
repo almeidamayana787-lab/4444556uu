@@ -1513,145 +1513,106 @@
     <script>
         // GGPIX Deposit Interceptor & Renderer
         (function () {
-            // Function to change text Suitpay -> GGPIX and hide old qrcode box
+            // Substituir texto Suitpay por GGPIX na tela
             function replaceSuitpayText() {
                 const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
                 let node;
                 while (node = walker.nextNode()) {
-                    if (node.nodeValue && node.nodeValue.toLowerCase().match(/suitpay/i)) {
+                    if (node.nodeValue && node.nodeValue.match(/suitpay/i)) {
                         node.nodeValue = node.nodeValue.replace(/suitpay/gi, 'GGPIX');
                     }
                 }
-
-                // Tentar encontrar elementos que se parecem com o modal antigo de pagamento
-                // e ocultá-los (pelo texto, por classes conhecidas em apps vue padrão)
-                document.querySelectorAll('div').forEach(el => {
-                    if(el.innerHTML.includes('Copiar código PIX') && !el.id.includes('ggpix')) {
-                        el.style.display = 'none';
-                    }
-                    if(el.innerHTML.includes('realizar o pagamento') && !el.id.includes('ggpix') && el.innerHTML.includes('qrcode')) {
-                         el.style.display = 'none';
-                    }
-                });
             }
             setInterval(replaceSuitpayText, 500);
 
-            // Intercept XHR for deposit
-            const originalXhrOpen = XMLHttpRequest.prototype.open;
-            const originalXhrSend = XMLHttpRequest.prototype.send;
+            function handleDepositResponse(data) {
+                console.log("[GGPIX] Resposta recebida:", data);
+                // Aceita qualquer campo que contenha o código PIX
+                const pixCode = data.qrcode || data.pixCopyPaste || data.pixCode || data.copy_paste || '';
+                console.log("[GGPIX] Código PIX extraido:", pixCode ? pixCode.substring(0, 50) + '...' : 'VAZIO');
+                if (pixCode) {
+                    renderGgpixDeposit(pixCode);
+                }
+            }
+
+            // Interceptar XHR
+            const origOpen = XMLHttpRequest.prototype.open;
+            const origSend = XMLHttpRequest.prototype.send;
             XMLHttpRequest.prototype.open = function (method, url) {
-                this._reqUrl = url;
-                return originalXhrOpen.apply(this, arguments);
+                this._ggpixUrl = url;
+                return origOpen.apply(this, arguments);
             };
             XMLHttpRequest.prototype.send = function () {
                 this.addEventListener('load', function () {
-                    if (this._reqUrl && this._reqUrl.includes('/api/suitpay/deposit')) {
-                        console.log("[GGPIX INTERCEPTOR] XHR Deposit response:", this.responseText);
+                    const url = this._ggpixUrl || '';
+                    if (url.includes('qrcode-pix') || url.includes('/api/suitpay/deposit') || url.includes('/deposit/payment')) {
+                        console.log("[GGPIX] XHR capturado:", url, this.responseText.substring(0, 200));
                         try {
-                            const data = JSON.parse(this.responseText);
-                            if (data.status && data.qrcode) {
-                                renderGgpixDeposit(data.qrcode, data.idTransaction);
-                            } else if (data.qrcode) {
-                                renderGgpixDeposit(data.qrcode, data.idTransaction);
-                            }
-                        } catch (e) {
-                            console.error("[GGPIX INTERCEPTOR] XHR Error parsing JSON", e);
-                        }
+                            handleDepositResponse(JSON.parse(this.responseText));
+                        } catch(e) { console.error("[GGPIX] XHR parse error", e); }
                     }
                 });
-                return originalXhrSend.apply(this, arguments);
+                return origSend.apply(this, arguments);
             };
 
-            // Intercept Fetch for deposit
-            const originalFetch = window.fetch;
+            // Interceptar Fetch
+            const origFetch = window.fetch;
             window.fetch = async function () {
-                const url = arguments[0];
-                const response = await originalFetch.apply(this, arguments);
-                
-                if (typeof url === 'string' && url.includes('/api/suitpay/deposit')) {
-                    const clone = response.clone();
-                    clone.json().then(data => {
-                        console.log("[GGPIX INTERCEPTOR] Fetch Deposit response:", data);
-                        if (data.status && data.qrcode) {
-                            renderGgpixDeposit(data.qrcode, data.idTransaction);
-                        } else if (data.qrcode) {
-                            renderGgpixDeposit(data.qrcode, data.idTransaction);
-                        }
-                    }).catch(e => console.error("[GGPIX INTERCEPTOR] Fetch Error parsing JSON", e));
+                const url = (typeof arguments[0] === 'string') ? arguments[0] : (arguments[0] && arguments[0].url) || '';
+                const response = await origFetch.apply(this, arguments);
+                if (url.includes('qrcode-pix') || url.includes('/api/suitpay/deposit') || url.includes('/deposit/payment')) {
+                    response.clone().json().then(data => {
+                        console.log("[GGPIX] Fetch capturado:", url, data);
+                        handleDepositResponse(data);
+                    }).catch(e => console.error("[GGPIX] Fetch parse error", e));
                 }
                 return response;
             };
 
-            function renderGgpixDeposit(pixString, idTransaction) {
-                console.log("[GGPIX INTERCEPTOR] Rendering GGPIX Overlay for PIX:", pixString);
-                let existing = document.getElementById('ggpix-deposit-overlay');
+            function renderGgpixDeposit(pixCode) {
+                let existing = document.getElementById('ggpix-overlay');
                 if (existing) existing.remove();
 
                 const overlay = document.createElement('div');
-                overlay.id = 'ggpix-deposit-overlay';
-                overlay.style.position = 'fixed';
-                overlay.style.top = '0';
-                overlay.style.left = '0';
-                overlay.style.width = '100vw';
-                overlay.style.height = '100vh';
-                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
-                overlay.style.zIndex = '999999';
-                overlay.style.display = 'flex';
-                overlay.style.justifyContent = 'center';
-                overlay.style.alignItems = 'center';
-                overlay.style.padding = '20px';
+                overlay.id = 'ggpix-overlay';
+                Object.assign(overlay.style, {
+                    position: 'fixed', top: '0', left: '0',
+                    width: '100vw', height: '100vh',
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    zIndex: '999999', display: 'flex',
+                    justifyContent: 'center', alignItems: 'center'
+                });
+
+                // URL Google Charts para gerar QR Code
+                const qrUrl = 'https://chart.googleapis.com/chart?chs=250x250&cht=qr&chl=' + encodeURIComponent(pixCode) + '&choe=UTF-8';
 
                 overlay.innerHTML = `
-                    <div style="background: #000; padding: 30px; border-radius: 12px; border: 2px dashed #444; max-width: 500px; width: 100%; text-align: center; color: #fff; font-family: 'Inter', sans-serif;">
-                        <h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; color: #fff;">Copie o código "copia e cola" abaixo para realizar o pagamento</h2>
-                        
-                        <div style="background: #fff; padding: 15px; border-radius: 8px; margin: 0 auto 20px auto; width: fit-content;" id="ggpix-qrcode-container"></div>
-                        
-                        <p style="color: #00e676; font-size: 0.9rem; margin-bottom: 20px;">Realize o pagamento em até 5 minutos ou será cancelado automaticamente</p>
-                        
-                        <div style="display: flex; align-items: center; background: #fff; border-radius: 6px; padding: 5px; margin-bottom: 20px;">
-                            <span style="color: #00e676; padding: 0 10px;">📋</span>
-                            <input type="text" readonly value="${pixString}" id="ggpix-copy-input" style="flex: 1; border: none; outline: none; padding: 10px; color: #333; background: transparent; font-size: 0.9rem;">
+                    <div style="background:#1a1a1a;padding:30px;border-radius:16px;border:1px solid #333;max-width:360px;width:100%;text-align:center;color:#fff;font-family:sans-serif;">
+                        <h2 style="font-size:1rem;font-weight:600;margin-bottom:20px;color:#fff;">Escaneie o QR Code para pagar</h2>
+                        <div style="background:#fff;padding:10px;border-radius:12px;display:inline-block;margin-bottom:16px;">
+                            <img src="${qrUrl}" width="220" height="220" alt="QR Code PIX" onerror="this.parentElement.innerHTML='<div id=qr-fallback style=width:220px;height:220px></div>';window.ggpixRenderQR('${pixCode}');" />
                         </div>
-                        
-                        <button onclick="copiarCodigoGgpix()" style="background: #00e676; color: #000; border: none; padding: 15px 20px; width: 100%; border-radius: 6px; font-weight: 700; font-size: 1rem; cursor: pointer; text-transform: uppercase;">
-                            COPIAR CÓDIGO "COPIA E COLA"
-                        </button>
-                        
-                        <div style="margin-top: 15px;">
-                             <button onclick="fecharGgpixOverlay()" style="background: transparent; color: #aaa; border: none; text-decoration: underline; cursor: pointer;">Fechar Janela</button>
-                        </div>
+                        <p style="color:#4caf50;font-size:0.85rem;margin-bottom:16px;">Válido por 5 minutos</p>
+                        <button onclick="fecharGgpixOverlay()" style="background:transparent;color:#888;border:1px solid #444;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:0.85rem;">Cancelar</button>
                     </div>
                 `;
                 document.body.appendChild(overlay);
 
-                if (typeof QRCode !== 'undefined') {
-                    new QRCode(document.getElementById("ggpix-qrcode-container"), {
-                        text: pixString,
-                        width: 200,
-                        height: 200,
-                        colorDark: "#000000",
-                        colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.M
-                    });
-                }
-            }
-
-            window.copiarCodigoGgpix = function () {
-                const input = document.getElementById('ggpix-copy-input');
-                input.select();
-                input.setSelectionRange(0, 99999);
-                navigator.clipboard.writeText(input.value).then(() => {
-                    alert("Código Pix copiado com sucesso!");
-                });
+                // Fallback: se Google Charts falhar, usa qrcode.js
+                window.ggpixRenderQR = function(code) {
+                    if (typeof QRCode !== 'undefined') {
+                        new QRCode(document.getElementById('qr-fallback'), {
+                            text: code, width: 220, height: 220,
+                            colorDark: '#000', colorLight: '#fff'
+                        });
+                    }
+                };
             }
 
             window.fecharGgpixOverlay = function () {
-                const overlay = document.getElementById('ggpix-deposit-overlay');
-                if (overlay) overlay.remove();
-                // Opcional: Recarregar a página para limpar estados do vue que ficaram pendentes após o erro 400 anterior ou ao fechar.
-                window.location.reload(); 
-            }
+                const el = document.getElementById('ggpix-overlay');
+                if (el) el.remove();
+            };
         })();
     </script>
 </body>

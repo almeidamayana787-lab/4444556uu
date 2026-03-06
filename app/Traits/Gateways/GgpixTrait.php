@@ -76,22 +76,31 @@ trait GgpixTrait
                 ];
             }
 
+            Log::info('[GgpixTrait] Chamando API GGPIX', ['url' => self::$baseUrlGgpix . '/api/v1/pix/in', 'payload' => $payload]);
+
             $response = Http::withHeaders([
                 'X-API-Key' => self::$apiKeyGgpix,
                 'Content-Type' => 'application/json',
             ])->post(self::$baseUrlGgpix . '/api/v1/pix/in', $payload);
 
+            Log::info('[GgpixTrait] Resposta API GGPIX', ['status' => $response->status(), 'body' => $response->body()]);
+
             if ($response->successful()) {
                 $responseData = $response->json();
+
+                Log::info('[GgpixTrait] responseData', ['data' => $responseData]);
 
                 // Grava as transações locais
                 self::generateTransactionGgpix($responseData['id'], \App\Helpers\Core::amountPrepare($request->amount), $idUnico);
                 self::generateDepositGgpix($responseData['id'], \App\Helpers\Core::amountPrepare($request->amount));
 
+                $pixCode = $responseData['pixCopyPaste'] ?? $responseData['pixCode'] ?? $responseData['qrcode'] ?? '';
+                Log::info('[GgpixTrait] pixCode para retornar', ['pixel_code_length' => strlen($pixCode), 'pixCopyPaste_key_exists' => isset($responseData['pixCopyPaste'])]);
+
                 return [
                     'status' => true,
                     'idTransaction' => (string) $responseData['id'],
-                    'qrcode' => $responseData['pixCopyPaste']
+                    'qrcode' => $pixCode
                 ];
             }
 
