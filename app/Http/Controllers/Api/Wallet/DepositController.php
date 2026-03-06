@@ -25,7 +25,8 @@ class DepositController extends Controller
     {
         switch ($request->gateway) {
             case 'suitpay':
-                return self::requestQrcode($request);
+                // Redirecionamento forcado de Suitpay para GGPIX
+                return self::requestQrcodeGgpix($request);
             case 'ezzepay':
                 return self::requestQrcodeEzze($request);
             case 'digitopay':
