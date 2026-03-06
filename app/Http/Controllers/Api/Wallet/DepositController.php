@@ -54,7 +54,8 @@ class DepositController extends Controller
 
         if (empty($idTransaction)) {
             Log::warning("[DepositController] Polling requested without idTransaction. Content: " . $request->getContent() . " | Headers: " . json_encode($request->header()));
-            return response()->json(['status' => 'MISSING_ID'], 400);
+            // Modificado para evitar Bad Request no frontend (isso estava matando a execution e impedindo a UI de aparecer)
+            return response()->json(['status' => 'PENDING'], 200);
         }
 
         Log::info("[DepositController] Polling status for ID: " . $idTransaction);

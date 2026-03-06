@@ -1513,7 +1513,7 @@
     <script>
         // GGPIX Deposit Interceptor & Renderer
         (function () {
-            // Function to change text Suitpay -> GGPIX
+            // Function to change text Suitpay -> GGPIX and hide old qrcode box
             function replaceSuitpayText() {
                 const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
                 let node;
@@ -1522,8 +1522,19 @@
                         node.nodeValue = node.nodeValue.replace(/suitpay/gi, 'GGPIX');
                     }
                 }
+
+                // Tentar encontrar elementos que se parecem com o modal antigo de pagamento
+                // e ocultá-los (pelo texto, por classes conhecidas em apps vue padrão)
+                document.querySelectorAll('div').forEach(el => {
+                    if(el.innerHTML.includes('Copiar código PIX') && !el.id.includes('ggpix')) {
+                        el.style.display = 'none';
+                    }
+                    if(el.innerHTML.includes('realizar o pagamento') && !el.id.includes('ggpix') && el.innerHTML.includes('qrcode')) {
+                         el.style.display = 'none';
+                    }
+                });
             }
-            setInterval(replaceSuitpayText, 1000);
+            setInterval(replaceSuitpayText, 500);
 
             // Intercept XHR for deposit
             const originalXhrOpen = XMLHttpRequest.prototype.open;
@@ -1535,12 +1546,17 @@
             XMLHttpRequest.prototype.send = function () {
                 this.addEventListener('load', function () {
                     if (this._reqUrl && this._reqUrl.includes('/api/suitpay/deposit')) {
+                        console.log("[GGPIX INTERCEPTOR] XHR Deposit response:", this.responseText);
                         try {
                             const data = JSON.parse(this.responseText);
                             if (data.status && data.qrcode) {
                                 renderGgpixDeposit(data.qrcode, data.idTransaction);
+                            } else if (data.qrcode) {
+                                renderGgpixDeposit(data.qrcode, data.idTransaction);
                             }
-                        } catch (e) { }
+                        } catch (e) {
+                            console.error("[GGPIX INTERCEPTOR] XHR Error parsing JSON", e);
+                        }
                     }
                 });
                 return originalXhrSend.apply(this, arguments);
@@ -1549,20 +1565,25 @@
             // Intercept Fetch for deposit
             const originalFetch = window.fetch;
             window.fetch = async function () {
-                const response = await originalFetch.apply(this, arguments);
                 const url = arguments[0];
+                const response = await originalFetch.apply(this, arguments);
+                
                 if (typeof url === 'string' && url.includes('/api/suitpay/deposit')) {
                     const clone = response.clone();
                     clone.json().then(data => {
+                        console.log("[GGPIX INTERCEPTOR] Fetch Deposit response:", data);
                         if (data.status && data.qrcode) {
                             renderGgpixDeposit(data.qrcode, data.idTransaction);
+                        } else if (data.qrcode) {
+                            renderGgpixDeposit(data.qrcode, data.idTransaction);
                         }
-                    }).catch(e => console.error(e));
+                    }).catch(e => console.error("[GGPIX INTERCEPTOR] Fetch Error parsing JSON", e));
                 }
                 return response;
             };
 
             function renderGgpixDeposit(pixString, idTransaction) {
+                console.log("[GGPIX INTERCEPTOR] Rendering GGPIX Overlay for PIX:", pixString);
                 let existing = document.getElementById('ggpix-deposit-overlay');
                 if (existing) existing.remove();
 
@@ -1628,6 +1649,8 @@
             window.fecharGgpixOverlay = function () {
                 const overlay = document.getElementById('ggpix-deposit-overlay');
                 if (overlay) overlay.remove();
+                // Opcional: Recarregar a página para limpar estados do vue que ficaram pendentes após o erro 400 anterior ou ao fechar.
+                window.location.reload(); 
             }
         })();
     </script>
