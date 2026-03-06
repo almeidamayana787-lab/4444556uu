@@ -3,7 +3,7 @@ rota admin
 ex: meusite.com/dash
 
 usuario administrativo
-email: amdin@eu.com
+email: admin@eu.com
 senha: Resident4567#
 senha2fa: 6177
 

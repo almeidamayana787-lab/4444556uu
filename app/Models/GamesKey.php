@@ -27,7 +27,11 @@ class GamesKey extends Model
         'playfiver_secret',
         'saldo_agente',
         'playfiver_code',
-        'playfiver_token'
+        'playfiver_token',
+        // MAX API GAMES
+        'max_api_code',
+        'max_api_token',
+        'max_api_secret'
     ];
 
     protected $hidden = ['updated_at'];
@@ -38,7 +42,7 @@ class GamesKey extends Model
     protected function playfiverSecret(): Attribute
     {
         return Attribute::make(
-            get: fn (?string $value) => env('APP_DEMO') ? '*********************' : $value,
+            get: fn(?string $value) => env('APP_DEMO') ? '*********************' : $value,
         );
     }
 
@@ -48,7 +52,7 @@ class GamesKey extends Model
     protected function playfiverCode(): Attribute
     {
         return Attribute::make(
-            get: fn (?string $value) => env('APP_DEMO') ? '*********************' : $value,
+            get: fn(?string $value) => env('APP_DEMO') ? '*********************' : $value,
         );
     }
 
@@ -58,7 +62,37 @@ class GamesKey extends Model
     protected function playfiverToken(): Attribute
     {
         return Attribute::make(
-            get: fn (?string $value) => env('APP_DEMO') ? '*********************' : $value,
+            get: fn(?string $value) => env('APP_DEMO') ? '*********************' : $value,
+        );
+    }
+
+    /**
+     * Accessor for max_api_secret.
+     */
+    protected function maxApiSecret(): Attribute
+    {
+        return Attribute::make(
+            get: fn(?string $value) => env('APP_DEMO') ? '*********************' : $value,
+        );
+    }
+
+    /**
+     * Accessor for max_api_code.
+     */
+    protected function maxApiCode(): Attribute
+    {
+        return Attribute::make(
+            get: fn(?string $value) => env('APP_DEMO') ? '*********************' : $value,
+        );
+    }
+
+    /**
+     * Accessor for max_api_token.
+     */
+    protected function maxApiToken(): Attribute
+    {
+        return Attribute::make(
+            get: fn(?string $value) => env('APP_DEMO') ? '*********************' : $value,
         );
     }
 }

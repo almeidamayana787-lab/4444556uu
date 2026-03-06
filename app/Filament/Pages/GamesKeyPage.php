@@ -42,7 +42,7 @@ class GamesKeyPage extends Page implements HasForms
     {
         return auth()->user()->hasRole('admin'); // Controla o acesso total à página
     }
-    
+
     public static function canView(): bool
     {
         return auth()->user()->hasRole('admin'); // Controla a visualização de elementos específicos
@@ -62,43 +62,47 @@ class GamesKeyPage extends Page implements HasForms
         $formData = [];
         if ($gamesKey) {
             $formData = array_merge($formData, [
-                'playfiver_code'   => $gamesKey->playfiver_code,
-                'playfiver_token'  => $gamesKey->playfiver_token,
+                'playfiver_code' => $gamesKey->playfiver_code,
+                'playfiver_token' => $gamesKey->playfiver_token,
                 'playfiver_secret' => $gamesKey->playfiver_secret,
+                // Max API Games
+                'max_api_code' => $gamesKey->max_api_code,
+                'max_api_token' => $gamesKey->max_api_token,
+                'max_api_secret' => $gamesKey->max_api_secret,
             ]);
         }
         if ($infos) {
             $formData = array_merge($formData, [
-                'rtp'           => $infos->rtp,
-                'limit_enable'  => $infos->limit_enable,
-                'limit_amount'  => $infos->limit_amount,
-                'limit_hours'   => $infos->limit_hours,
-                'bonus_enable'  => $infos->bonus_enable,
+                'rtp' => $infos->rtp,
+                'limit_enable' => $infos->limit_enable,
+                'limit_amount' => $infos->limit_amount,
+                'limit_hours' => $infos->limit_hours,
+                'bonus_enable' => $infos->bonus_enable,
             ]);
         }
         $this->form->fill($formData);
     }
 
-/**
- * @param Form $form
- * @return Form
- */
-public function form(Form $form): Form
-{
-    $data = ConfigPlayFiver::where("edit", true)->latest('id')->first(["edit", "updated_at"]);
-    $locked = session()->get('agent_locked', false);
-    $minutesPassed = 10;
-    if ($data != null) {
-        $minutesPassed = now()->diffInMinutes($data->updated_at);
-        if ($minutesPassed < 10) {
-            $locked = session()->get('agent_locked', true);
+    /**
+     * @param Form $form
+     * @return Form
+     */
+    public function form(Form $form): Form
+    {
+        $data = ConfigPlayFiver::where("edit", true)->latest('id')->first(["edit", "updated_at"]);
+        $locked = session()->get('agent_locked', false);
+        $minutesPassed = 10;
+        if ($data != null) {
+            $minutesPassed = now()->diffInMinutes($data->updated_at);
+            if ($minutesPassed < 10) {
+                $locked = session()->get('agent_locked', true);
+            }
         }
-    }
 
-    return $form
-        ->schema([
-            Section::make('PLAYFIVER API')
-                ->description(new \Illuminate\Support\HtmlString('
+        return $form
+            ->schema([
+                Section::make('PLAYFIVER API')
+                    ->description(new \Illuminate\Support\HtmlString('
                     <div style="display: flex; align-items: center;">
                         Nossa API fornece diversos jogos de slots e ao vivo. :
                         <a class="dark:text-white" 
@@ -136,46 +140,62 @@ public function form(Form $form): Form
                          
                     </div>
                 '))
-                ->schema([
-                  
-                    Section::make('CHAVES DE ACESSO PLAYFIVER')
-                        ->description(new HtmlString('<b>Seu Webhook:  ' . url("/playfiver/webhook", [], true) . "</b>"))
-                        ->schema([
-                            TextInput::make('playfiver_code')
-                                ->label('CÓDIGO DO AGENTE')
-                                ->placeholder('Digite aqui o código do agente')
-                                ->maxLength(191),
-                            TextInput::make('playfiver_token')
-                                ->label('AGENTE TOKEN')
-                                ->placeholder('Digite aqui o token do agente')
-                                ->maxLength(191),
-                            TextInput::make('playfiver_secret')
-                                ->label('AGENTE SECRETO')
-                                ->placeholder('Digite aqui o código secreto do agente')
-                                ->maxLength(191),
-                        ])->columns(3),
-                    Section::make('CONFIGURAÇÃO DO AGENTE')
-                        ->description('Você pode configurar o RTP, os limites e os bônus nesta área. (As informações podem estar desatualizadas em relação às da própria PlayFiver.)')
-                        ->schema([
-                            TextInput::make('rtp')
-                                ->label('RTP')
-                                ->disabled(fn () => $locked),
-                            TextInput::make('limit_amount')
-                                ->label('Quantia de limite')
-                                ->disabled(fn () => $locked),
-                            TextInput::make('limit_hours')
-                                ->label('Quantas horas vale o limite')
-                                ->disabled(fn () => $locked),
-                            Toggle::make('limit_enable')
-                                ->label('Limite ativo')
-                                ->disabled(fn () => $locked),
-                            Toggle::make('bonus_enable')
-                                ->label('Bônus ativo')
-                                ->disabled(fn () => $locked),
-                            Placeholder::make('')
-                                ->extraAttributes(['class' => 'flex justify-end'])
-                                ->disabled(fn () => $locked)
-                                ->content(fn () => new \Illuminate\Support\HtmlString('
+                    ->schema([
+
+                        Section::make('CHAVES DE ACESSO PLAYFIVER')
+                            ->description(new HtmlString('<b>Seu Webhook:  ' . url("/playfiver/webhook", [], true) . "</b>"))
+                            ->schema([
+                                TextInput::make('playfiver_code')
+                                    ->label('CÓDIGO DO AGENTE')
+                                    ->placeholder('Digite aqui o código do agente')
+                                    ->maxLength(191),
+                                TextInput::make('playfiver_token')
+                                    ->label('AGENTE TOKEN')
+                                    ->placeholder('Digite aqui o token do agente')
+                                    ->maxLength(191),
+                                TextInput::make('playfiver_secret')
+                                    ->label('AGENTE SECRETO')
+                                    ->placeholder('Digite aqui o código secreto do agente')
+                                    ->maxLength(191),
+                            ])->columns(3),
+                        Section::make('CHAVES DE ACESSO MAX API GAMES')
+                            ->description(new HtmlString('<b>Seu Webhook (Seamless):  ' . url("/maxapigames/webhook", [], true) . "</b>"))
+                            ->schema([
+                                TextInput::make('max_api_code')
+                                    ->label('CÓDIGO DO AGENTE')
+                                    ->placeholder('Digite aqui o código do agente')
+                                    ->maxLength(191),
+                                TextInput::make('max_api_token')
+                                    ->label('AGENTE TOKEN')
+                                    ->placeholder('Digite aqui o token do agente')
+                                    ->maxLength(191),
+                                TextInput::make('max_api_secret')
+                                    ->label('AGENTE SECRETO')
+                                    ->placeholder('Digite aqui a chave secreta do agente')
+                                    ->maxLength(191),
+                            ])->columns(3),
+                        Section::make('CONFIGURAÇÃO DO AGENTE')
+                            ->description('Você pode configurar o RTP, os limites e os bônus nesta área. (As informações podem estar desatualizadas em relação às da própria PlayFiver.)')
+                            ->schema([
+                                TextInput::make('rtp')
+                                    ->label('RTP')
+                                    ->disabled(fn() => $locked),
+                                TextInput::make('limit_amount')
+                                    ->label('Quantia de limite')
+                                    ->disabled(fn() => $locked),
+                                TextInput::make('limit_hours')
+                                    ->label('Quantas horas vale o limite')
+                                    ->disabled(fn() => $locked),
+                                Toggle::make('limit_enable')
+                                    ->label('Limite ativo')
+                                    ->disabled(fn() => $locked),
+                                Toggle::make('bonus_enable')
+                                    ->label('Bônus ativo')
+                                    ->disabled(fn() => $locked),
+                                Placeholder::make('')
+                                    ->extraAttributes(['class' => 'flex justify-end'])
+                                    ->disabled(fn() => $locked)
+                                    ->content(fn() => new \Illuminate\Support\HtmlString('
                                     <button 
                                         type="button"
                                         wire:click="saveInfo"
@@ -184,74 +204,75 @@ public function form(Form $form): Form
                                         Atualizar Informações
                                     </button>
                                 ')),
-                            View::make('filament.forms.locked-agent')
-                                ->viewData(["minutes" => 10 - $minutesPassed])
-                                ->visible(fn() => $locked),
-                        ])->columns(3)
-                        ->extraAttributes(['class' => 'relative overflow-hidden min-h-[250px] bg-white/30 backdrop-blur-lg']),
-                ]),
-            // Nova seção para solicitar a senha de 2FA antes de salvar alterações
-            Section::make('Confirmação de Alteração')
-                ->schema([
-                    TextInput::make('admin_password')
-                        ->label('Senha de 2FA a que esta no arquivo (.env)')
-                        ->placeholder('Digite a senha de 2FA')
-                        ->password()
-                        ->required()
-                        // Esse método faz com que o valor não seja persistido no model
-                        ->dehydrateStateUsing(fn($state) => null),
-                ]),
-        ])
-        ->statePath('data');
-}
-
-
-public function saveInfo() {
-    try{
-        $setting = GamesKey::first();
-
-        $response = Http::withOptions([
-            'force_ip_resolve' => 'v4', // Forçar IPv4
-        ])->put('https://api.playfivers.com/api/v2/agent', [
-            'agentToken' => $setting->playfiver_token,
-            'secretKey'  => $setting->playfiver_secret,
-            "rtp" => $this->data['rtp'],
-            "limit_enable" => $this->data['limit_enable'],
-            "limite_amount" => $this->data['limit_amount'],
-            "limit_hours" => $this->data['limit_hours'],
-            "bonus_enable" => $this->data['bonus_enable']
-        ]);
-
-        if($response->successful()){
-            ConfigPlayFiver::latest('id')->update(["edit" => true]);
-            return redirect("/admin/chaves-dos-jogos");
-        }
-
-        Notification::make()
-            ->title('Atenção')
-            ->body('Ocorreu um erro ao tentar atualizar os dados da playfiver')
-            ->danger()
-            ->send();
-    }catch(Exception $e){
-        Notification::make()
-            ->title('Atenção')
-            ->body('Ocorreu um erro ao tentar atualizar os dados da playfiver')
-            ->danger()
-            ->send();
+                                View::make('filament.forms.locked-agent')
+                                    ->viewData(["minutes" => 10 - $minutesPassed])
+                                    ->visible(fn() => $locked),
+                            ])->columns(3)
+                            ->extraAttributes(['class' => 'relative overflow-hidden min-h-[250px] bg-white/30 backdrop-blur-lg']),
+                    ]),
+                // Nova seção para solicitar a senha de 2FA antes de salvar alterações
+                Section::make('Confirmação de Alteração')
+                    ->schema([
+                        TextInput::make('admin_password')
+                            ->label('Senha de 2FA a que esta no arquivo (.env)')
+                            ->placeholder('Digite a senha de 2FA')
+                            ->password()
+                            ->required()
+                            // Esse método faz com que o valor não seja persistido no model
+                            ->dehydrateStateUsing(fn($state) => null),
+                    ]),
+            ])
+            ->statePath('data');
     }
-}
+
+
+    public function saveInfo()
+    {
+        try {
+            $setting = GamesKey::first();
+
+            $response = Http::withOptions([
+                'force_ip_resolve' => 'v4', // Forçar IPv4
+            ])->put('https://api.playfivers.com/api/v2/agent', [
+                        'agentToken' => $setting->playfiver_token,
+                        'secretKey' => $setting->playfiver_secret,
+                        "rtp" => $this->data['rtp'],
+                        "limit_enable" => $this->data['limit_enable'],
+                        "limite_amount" => $this->data['limit_amount'],
+                        "limit_hours" => $this->data['limit_hours'],
+                        "bonus_enable" => $this->data['bonus_enable']
+                    ]);
+
+            if ($response->successful()) {
+                ConfigPlayFiver::latest('id')->update(["edit" => true]);
+                return redirect("/admin/chaves-dos-jogos");
+            }
+
+            Notification::make()
+                ->title('Atenção')
+                ->body('Ocorreu um erro ao tentar atualizar os dados da playfiver')
+                ->danger()
+                ->send();
+        } catch (Exception $e) {
+            Notification::make()
+                ->title('Atenção')
+                ->body('Ocorreu um erro ao tentar atualizar os dados da playfiver')
+                ->danger()
+                ->send();
+        }
+    }
 
     private function getInfo()
     {
-        try{
+        try {
             $setting = GamesKey::first();
             $response = Http::withOptions([
                 'force_ip_resolve' => 'v4', // Forçar IPv4
             ])->get('https://api.playfivers.com/api/v2/agent', [
-                'agentToken' => $setting->playfiver_token,
-                'secretKey'  => $setting->playfiver_secret,
-            ]);
-    
+                        'agentToken' => $setting->playfiver_token,
+                        'secretKey' => $setting->playfiver_secret,
+                    ]);
+
             if ($response->successful()) {
                 $response = $response->json();
                 $data = ConfigPlayFiver::create([
@@ -261,15 +282,15 @@ public function saveInfo() {
                     'limit_hours' => $response['data']['limit_hours'],
                     'bonus_enable' => $response['data']['bonus_enable'],
                 ]);
-                return $data; 
+                return $data;
             } else {
                 $data = ConfigPlayFiver::latest('id')->first();
-                if($data == null){
+                if ($data == null) {
                     throw new Exception();
                 }
-                return $data; 
+                return $data;
             }
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             Log::error('Erro ao atualizar informações da PlayFiver:', ['exception' => $e->getMessage()]);
             Notification::make()
                 ->title('Atenção')
@@ -279,7 +300,7 @@ public function saveInfo() {
             return null;
         }
     }
-    
+
     /**
      * @return void
      */
@@ -295,7 +316,7 @@ public function saveInfo() {
                     ->send();
                 return;
             }
-    
+
             // Validação da senha de 2FA: Verifica se o campo 'admin_password' está presente
             // e se o valor informado bate com o token definido em TOKEN_DE_2FA.
             if (
@@ -309,7 +330,7 @@ public function saveInfo() {
                     ->send();
                 return;
             }
-    
+
             // Prossegue com a atualização ou criação dos dados
             $setting = GamesKey::first();
             if (!empty($setting)) {
@@ -337,5 +358,5 @@ public function saveInfo() {
                 ->send();
         }
     }
-    
+
 }
