@@ -53,7 +53,7 @@ class DepositController extends Controller
         $idTransaction = $request->input("idTransaction") ?? $request->input("id") ?? $request->input("transaction_id");
 
         if (empty($idTransaction)) {
-            Log::warning("[DepositController] Polling requested without idTransaction. Payload: ", $request->all());
+            Log::warning("[DepositController] Polling requested without idTransaction. Content: " . $request->getContent() . " | Headers: " . json_encode($request->header()));
             return response()->json(['status' => 'MISSING_ID'], 400);
         }
 
