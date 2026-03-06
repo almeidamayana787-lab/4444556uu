@@ -1,0 +1,18 @@
+rota admin
+/dash 
+ex: meusite.com/dash
+
+usuario administrativo
+email: amdin@eu.com
+senha: Resident4567#
+senha2fa: 6177
+
+lembrando pode alterar a senha2fa pelo arquivo env 
+e a rota do admin tbm 
+
+compre seu sitema comigo 
+partice do meu grupo do telegram
+https://t.me/jcts99
+
+
+45999057184
