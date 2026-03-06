@@ -28,11 +28,23 @@ class GamesKey extends Model
         'saldo_agente',
         'playfiver_code',
         'playfiver_token',
+        // PlayFiver agent config
+        'pf_rtp',
+        'pf_limit_amount',
+        'pf_limit_hours',
+        'pf_limit_enable',
+        'pf_bonus_enable',
         // MAX API GAMES
         'max_api_code',
         'max_api_token',
         'max_api_secret',
-        'active_api'
+        'active_api',
+        // MAX API agent config
+        'max_rtp',
+        'max_limit_amount',
+        'max_limit_hours',
+        'max_limit_enable',
+        'max_bonus_enable',
     ];
 
     protected $hidden = ['updated_at'];

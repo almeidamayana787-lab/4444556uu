@@ -5,7 +5,6 @@ namespace App\Filament\Pages;
 use App\Models\ConfigPlayFiver;
 use App\Models\GamesKey;
 use Exception;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -34,75 +33,87 @@ class GamesKeyPage extends Page implements HasForms
 
     protected static ?string $slug = 'chaves-dos-jogos';
 
-    /**
-     * @dev  
-     * @return bool
-     */
     public static function canAccess(): bool
     {
-        return auth()->user()->hasRole('admin'); // Controla o acesso total à página
+        return auth()->user()->hasRole('admin');
     }
 
     public static function canView(): bool
     {
-        return auth()->user()->hasRole('admin'); // Controla a visualização de elementos específicos
+        return auth()->user()->hasRole('admin');
     }
-
 
     public ?array $data = [];
     public ?GamesKey $setting;
 
-    /**
-     * @return void
-     */
     public function mount(): void
     {
         $gamesKey = GamesKey::first();
-        $infos = $this->getInfo();
         $formData = [];
+
         if ($gamesKey) {
-            $formData = array_merge($formData, [
+            $attrs = $gamesKey->getAttributes();
+            $formData = [
+                // Credentials
                 'playfiver_code' => $gamesKey->playfiver_code,
                 'playfiver_token' => $gamesKey->playfiver_token,
                 'playfiver_secret' => $gamesKey->playfiver_secret,
-                // Max API Games
                 'max_api_code' => $gamesKey->max_api_code,
                 'max_api_token' => $gamesKey->max_api_token,
                 'max_api_secret' => $gamesKey->max_api_secret,
-                // Active API
-                'active_api' => $gamesKey->active_api,
-            ]);
+                'active_api' => $gamesKey->active_api ?? 'playfiver',
+
+                // PlayFiver agent config — load from DB (persisted)
+                'pf_rtp' => $attrs['pf_rtp'] ?? null,
+                'pf_limit_amount' => $attrs['pf_limit_amount'] ?? null,
+                'pf_limit_hours' => $attrs['pf_limit_hours'] ?? null,
+                'pf_limit_enable' => (bool) ($attrs['pf_limit_enable'] ?? false),
+                'pf_bonus_enable' => (bool) ($attrs['pf_bonus_enable'] ?? true),
+
+                // MAX API agent config — load from DB (persisted)
+                'max_rtp' => $attrs['max_rtp'] ?? null,
+                'max_limit_amount' => $attrs['max_limit_amount'] ?? null,
+                'max_limit_hours' => $attrs['max_limit_hours'] ?? null,
+                'max_limit_enable' => (bool) ($attrs['max_limit_enable'] ?? false),
+                'max_bonus_enable' => (bool) ($attrs['max_bonus_enable'] ?? true),
+            ];
+
+            // Try to sync PlayFiver config from remote API if credentials are set
+            if (!empty($attrs['playfiver_token']) && !empty($attrs['playfiver_secret'])) {
+                $remote = $this->getPlayFiverInfo($gamesKey);
+                if ($remote) {
+                    // Only use remote values if we don't have DB values yet
+                    if (empty($attrs['pf_rtp'])) {
+                        $formData['pf_rtp'] = $remote['rtp'] ?? null;
+                        $formData['pf_limit_amount'] = $remote['limit_amount'] ?? null;
+                        $formData['pf_limit_hours'] = $remote['limit_hours'] ?? null;
+                        $formData['pf_limit_enable'] = (bool) ($remote['limit_enable'] ?? false);
+                        $formData['pf_bonus_enable'] = (bool) ($remote['bonus_enable'] ?? true);
+                    }
+                }
+            }
         }
-        if ($infos) {
-            $formData = array_merge($formData, [
-                'rtp' => $infos->rtp,
-                'limit_enable' => $infos->limit_enable,
-                'limit_amount' => $infos->limit_amount,
-                'limit_hours' => $infos->limit_hours,
-                'bonus_enable' => $infos->bonus_enable,
-            ]);
-        }
+
         $this->form->fill($formData);
     }
 
-    /**
-     * @param Form $form
-     * @return Form
-     */
     public function form(Form $form): Form
     {
-        $data = ConfigPlayFiver::where("edit", true)->latest('id')->first(["edit", "updated_at"]);
-        $locked = session()->get('agent_locked', false);
+        $configPf = ConfigPlayFiver::where("edit", true)->latest('id')->first(["edit", "updated_at"]);
+        $locked = false;
         $minutesPassed = 10;
-        if ($data != null) {
-            $minutesPassed = now()->diffInMinutes($data->updated_at);
+        if ($configPf != null) {
+            $minutesPassed = now()->diffInMinutes($configPf->updated_at);
             if ($minutesPassed < 10) {
-                $locked = session()->get('agent_locked', true);
+                $locked = true;
             }
         }
 
         return $form
             ->schema([
+                // ─────────────────────────────────────────────────────
+                // GLOBAL API SELECTOR
+                // ─────────────────────────────────────────────────────
                 Section::make('CONFIGURAÇÃO GLOBAL DA API')
                     ->description('Selecione qual provedor de jogos você deseja que seja o padrão ativo. Ao trocar, as chamadas para obter jogos e criar usuários ocorrerão apenas na opção ativa.')
                     ->schema([
@@ -110,54 +121,30 @@ class GamesKeyPage extends Page implements HasForms
                             ->label('API Ativa de Jogos')
                             ->options([
                                 'playfiver' => 'PlayFiver / Funciona com Painel Playfiver',
-                                'max_api' => 'MAX API GAMES / Apenas a Max API Games'
+                                'max_api' => 'MAX API GAMES / Apenas a Max API Games',
                             ])
                             ->required()
                             ->default('playfiver'),
                     ]),
+
+                // ─────────────────────────────────────────────────────
+                // PLAYFIVER SECTION
+                // ─────────────────────────────────────────────────────
                 Section::make('PLAYFIVER API')
-                    ->description(new \Illuminate\Support\HtmlString('
+                    ->description(new HtmlString('
                     <div style="display: flex; align-items: center;">
                         Nossa API fornece diversos jogos de slots e ao vivo. :
-                        <a class="dark:text-white" 
-                           style="
-                                font-size: 14px;
-                                font-weight: 600;
-                                width: 127px;
-                                display: flex;
-                                background-color: #00b91e;
-                                padding: 10px;
-                                border-radius: 11px;
-                                justify-content: center;
-                                margin-left: 10px;
-                           " 
-                           href="https://playfiver.app" 
-                           target="_blank">
-                            PAINEL PLAYFIVER
-                        </a>
-                        <a class="dark:text-white" 
-                           style="
-                                font-size: 14px;
-                                font-weight: 600;
-                                width: 127px;
-                                display: flex;
-                                background-color: #00b91e;
-                                padding: 10px;
-                                border-radius: 11px;
-                                justify-content: center;
-                                margin-left: 10px;
-                           " 
-                           href="https://t.me/jcts99" 
-                           target="_blank">
-                            GRUPO TELEGRAM
-                        </a>
-                         
+                        <a class="dark:text-white"
+                           style="font-size:14px;font-weight:600;width:127px;display:flex;background-color:#00b91e;padding:10px;border-radius:11px;justify-content:center;margin-left:10px;"
+                           href="https://playfiver.app" target="_blank">PAINEL PLAYFIVER</a>
+                        <a class="dark:text-white"
+                           style="font-size:14px;font-weight:600;width:127px;display:flex;background-color:#00b91e;padding:10px;border-radius:11px;justify-content:center;margin-left:10px;"
+                           href="https://t.me/jcts99" target="_blank">GRUPO TELEGRAM</a>
                     </div>
                 '))
                     ->schema([
-
                         Section::make('CHAVES DE ACESSO PLAYFIVER')
-                            ->description(new HtmlString('<b>Seu Webhook:  ' . url("/playfiver/webhook", [], true) . "</b>"))
+                            ->description(new HtmlString('<b>Seu Webhook: ' . url("/playfiver/webhook", [], true) . '</b>'))
                             ->schema([
                                 TextInput::make('playfiver_code')
                                     ->label('CÓDIGO DO AGENTE')
@@ -172,8 +159,61 @@ class GamesKeyPage extends Page implements HasForms
                                     ->placeholder('Digite aqui o código secreto do agente')
                                     ->maxLength(191),
                             ])->columns(3),
+
+                        Section::make('CONFIGURAÇÃO DO AGENTE PLAYFIVER')
+                            ->description('Configure o RTP, limites e bônus da PlayFiver. Os valores são salvos localmente e enviados à PlayFiver ao clicar em "Atualizar Informações".')
+                            ->schema([
+                                TextInput::make('pf_rtp')
+                                    ->label('RTP (%)')
+                                    ->numeric()
+                                    ->disabled(fn() => $locked),
+                                TextInput::make('pf_limit_amount')
+                                    ->label('Quantia de limite (R$)')
+                                    ->numeric()
+                                    ->disabled(fn() => $locked),
+                                TextInput::make('pf_limit_hours')
+                                    ->label('Quantas horas vale o limite')
+                                    ->numeric()
+                                    ->disabled(fn() => $locked),
+                                Toggle::make('pf_limit_enable')
+                                    ->label('Limite ativo')
+                                    ->disabled(fn() => $locked),
+                                Toggle::make('pf_bonus_enable')
+                                    ->label('Bônus ativo')
+                                    ->disabled(fn() => $locked),
+                                Placeholder::make('')
+                                    ->extraAttributes(['class' => 'flex justify-end'])
+                                    ->disabled(fn() => $locked)
+                                    ->content(fn() => new HtmlString('
+                                    <button
+                                        type="button"
+                                        wire:click="savePlayfiverInfo"
+                                        style="background-color:#00b91e;border-radius:17px;width:180px;text-align:center;cursor:pointer;padding:10px 16px;color:white;font-weight:600;">
+                                        Atualizar Informações
+                                    </button>
+                                ')),
+                                View::make('filament.forms.locked-agent')
+                                    ->viewData(["minutes" => 10 - $minutesPassed])
+                                    ->visible(fn() => $locked),
+                            ])->columns(3)
+                            ->extraAttributes(['class' => 'relative overflow-hidden min-h-[250px] bg-white/30 backdrop-blur-lg']),
+                    ]),
+
+                // ─────────────────────────────────────────────────────
+                // MAX API GAMES SECTION
+                // ─────────────────────────────────────────────────────
+                Section::make('MAX API GAMES')
+                    ->description(new HtmlString('
+                    <div style="display: flex; align-items: center;">
+                        Integre jogos com a MAX API GAMES — alta performance, seamless e ao vivo.
+                        <a class="dark:text-white"
+                           style="font-size:14px;font-weight:600;width:150px;display:flex;background-color:#00b91e;padding:10px;border-radius:11px;justify-content:center;margin-left:10px;"
+                           href="https://maxapigames.com" target="_blank">PAINEL MAX API</a>
+                    </div>
+                '))
+                    ->schema([
                         Section::make('CHAVES DE ACESSO MAX API GAMES')
-                            ->description(new HtmlString('<b>Seu Webhook (Seamless):  ' . url("/maxapigames/webhook", [], true) . "</b>"))
+                            ->description(new HtmlString('<b>Seu Webhook (Seamless): ' . url("/maxapigames/webhook", [], true) . '</b>'))
                             ->schema([
                                 TextInput::make('max_api_code')
                                     ->label('CÓDIGO DO AGENTE')
@@ -188,43 +228,30 @@ class GamesKeyPage extends Page implements HasForms
                                     ->placeholder('Digite aqui a chave secreta do agente')
                                     ->maxLength(191),
                             ])->columns(3),
-                        Section::make('CONFIGURAÇÃO DO AGENTE')
-                            ->description('Você pode configurar o RTP, os limites e os bônus nesta área. (As informações podem estar desatualizadas em relação às da própria PlayFiver.)')
+
+                        Section::make('CONFIGURAÇÃO DO AGENTE MAX API GAMES')
+                            ->description('Configure o RTP, limites e bônus da MAX API Games. Os valores são salvos localmente nesta plataforma.')
                             ->schema([
-                                TextInput::make('rtp')
-                                    ->label('RTP')
-                                    ->disabled(fn() => $locked),
-                                TextInput::make('limit_amount')
-                                    ->label('Quantia de limite')
-                                    ->disabled(fn() => $locked),
-                                TextInput::make('limit_hours')
+                                TextInput::make('max_rtp')
+                                    ->label('RTP (%)')
+                                    ->numeric(),
+                                TextInput::make('max_limit_amount')
+                                    ->label('Quantia de limite (R$)')
+                                    ->numeric(),
+                                TextInput::make('max_limit_hours')
                                     ->label('Quantas horas vale o limite')
-                                    ->disabled(fn() => $locked),
-                                Toggle::make('limit_enable')
-                                    ->label('Limite ativo')
-                                    ->disabled(fn() => $locked),
-                                Toggle::make('bonus_enable')
-                                    ->label('Bônus ativo')
-                                    ->disabled(fn() => $locked),
-                                Placeholder::make('')
-                                    ->extraAttributes(['class' => 'flex justify-end'])
-                                    ->disabled(fn() => $locked)
-                                    ->content(fn() => new \Illuminate\Support\HtmlString('
-                                    <button 
-                                        type="button"
-                                        wire:click="saveInfo"
-                                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                        style="background-color: #00b91e; border-radius: 17px; width: 164px;text-align: center; cursor:pointer;">
-                                        Atualizar Informações
-                                    </button>
-                                ')),
-                                View::make('filament.forms.locked-agent')
-                                    ->viewData(["minutes" => 10 - $minutesPassed])
-                                    ->visible(fn() => $locked),
+                                    ->numeric(),
+                                Toggle::make('max_limit_enable')
+                                    ->label('Limite ativo'),
+                                Toggle::make('max_bonus_enable')
+                                    ->label('Bônus ativo'),
                             ])->columns(3)
                             ->extraAttributes(['class' => 'relative overflow-hidden min-h-[250px] bg-white/30 backdrop-blur-lg']),
                     ]),
-                // Nova seção para solicitar a senha de 2FA antes de salvar alterações
+
+                // ─────────────────────────────────────────────────────
+                // 2FA CONFIRMATION
+                // ─────────────────────────────────────────────────────
                 Section::make('Confirmação de Alteração')
                     ->schema([
                         TextInput::make('admin_password')
@@ -232,159 +259,150 @@ class GamesKeyPage extends Page implements HasForms
                             ->placeholder('Digite a senha de 2FA')
                             ->password()
                             ->required()
-                            // Esse método faz com que o valor não seja persistido no model
                             ->dehydrateStateUsing(fn($state) => null),
                     ]),
             ])
             ->statePath('data');
     }
 
-
-    public function saveInfo()
+    /**
+     * "Atualizar Informações" — PlayFiver only.
+     * Sends agent config to PlayFiver API AND saves locally to DB.
+     */
+    public function savePlayfiverInfo(): void
     {
         try {
             $setting = GamesKey::first();
-            $activeApi = $this->data['active_api'] ?? $setting?->active_api ?? 'playfiver';
 
-            // Só chama a API da PlayFiver se ela for a API ativa
-            if ($activeApi === 'playfiver') {
-                $response = Http::withOptions([
-                    'force_ip_resolve' => 'v4',
-                ])->put('https://api.playfivers.com/api/v2/agent', [
-                            'agentToken' => $setting->playfiver_token,
-                            'secretKey' => $setting->playfiver_secret,
-                            'rtp' => $this->data['rtp'],
-                            'limit_enable' => $this->data['limit_enable'],
-                            'limite_amount' => $this->data['limit_amount'],
-                            'limit_hours' => $this->data['limit_hours'],
-                            'bonus_enable' => $this->data['bonus_enable'],
-                        ]);
+            // Save to DB first (fixes the F5 reset bug)
+            $setting->update([
+                'pf_rtp' => $this->data['pf_rtp'],
+                'pf_limit_amount' => $this->data['pf_limit_amount'],
+                'pf_limit_hours' => $this->data['pf_limit_hours'],
+                'pf_limit_enable' => (bool) ($this->data['pf_limit_enable'] ?? false),
+                'pf_bonus_enable' => (bool) ($this->data['pf_bonus_enable'] ?? true),
+            ]);
 
-                if ($response->successful()) {
-                    ConfigPlayFiver::latest('id')->update(["edit" => true]);
-                    return redirect("/admin/chaves-dos-jogos");
-                }
-
-                Notification::make()
-                    ->title('Atenção')
-                    ->body('Ocorreu um erro ao tentar atualizar os dados da playfiver')
-                    ->danger()
-                    ->send();
-
-                return;
-            }
-
-            // Para max_api, apenas informa que foi salvo com sucesso
-            Notification::make()
-                ->title('MAX API GAMES ativa')
-                ->body('As configurações são controladas apenas no painel MAX API GAMES.')
-                ->success()
-                ->send();
-
-        } catch (Exception $e) {
-            Notification::make()
-                ->title('Atenção')
-                ->body('Ocorreu um erro ao tentar atualizar os dados: ' . $e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
-
-    private function getInfo()
-    {
-        try {
-            $setting = GamesKey::first();
-            $response = Http::withOptions([
-                'force_ip_resolve' => 'v4', // Forçar IPv4
-            ])->get('https://api.playfivers.com/api/v2/agent', [
-                        'agentToken' => $setting->playfiver_token,
-                        'secretKey' => $setting->playfiver_secret,
-                    ]);
+            // Send to PlayFiver API
+            $response = Http::withOptions(['force_ip_resolve' => 'v4'])
+                ->put('https://api.playfivers.com/api/v2/agent', [
+                    'agentToken' => $setting->getAttributes()['playfiver_token'],
+                    'secretKey' => $setting->getAttributes()['playfiver_secret'],
+                    'rtp' => $this->data['pf_rtp'],
+                    'limit_enable' => $this->data['pf_limit_enable'],
+                    'limite_amount' => $this->data['pf_limit_amount'],
+                    'limit_hours' => $this->data['pf_limit_hours'],
+                    'bonus_enable' => $this->data['pf_bonus_enable'],
+                ]);
 
             if ($response->successful()) {
-                $response = $response->json();
-                $data = ConfigPlayFiver::create([
-                    'rtp' => $response['data']['rtp'],
-                    'limit_enable' => $response['data']['limit_enable'],
-                    'limit_amount' => $response['data']['limit_amount'],
-                    'limit_hours' => $response['data']['limit_hours'],
-                    'bonus_enable' => $response['data']['bonus_enable'],
-                ]);
-                return $data;
-            } else {
-                $data = ConfigPlayFiver::latest('id')->first();
-                if ($data == null) {
-                    throw new Exception();
-                }
-                return $data;
+                ConfigPlayFiver::latest('id')->update(["edit" => true]);
+                Notification::make()
+                    ->title('Sucesso')
+                    ->body('Informações enviadas para a PlayFiver com sucesso!')
+                    ->success()
+                    ->send();
+                return redirect("/admin/chaves-dos-jogos");
             }
-        } catch (Exception $e) {
-            Log::error('Erro ao atualizar informações da PlayFiver:', ['exception' => $e->getMessage()]);
+
             Notification::make()
                 ->title('Atenção')
-                ->body('Ocorreu um erro ao tentar recuperar os dados da playfiver')
+                ->body('Os dados foram salvos localmente, mas houve um erro ao enviar para a PlayFiver.')
+                ->warning()
+                ->send();
+
+        } catch (Exception $e) {
+            Notification::make()
+                ->title('Erro')
+                ->body('Erro ao atualizar: ' . $e->getMessage())
                 ->danger()
                 ->send();
-            return null;
         }
     }
 
     /**
-     * @return void
+     * Main save — saves API keys and all agent configs to DB.
      */
     public function submit(): void
     {
         try {
-            // Se a aplicação estiver em modo demo, bloqueia a alteração.
             if (env('APP_DEMO')) {
-                Notification::make()
-                    ->title('Atenção')
-                    ->body('Você não pode realizar esta alteração na versão demo')
-                    ->danger()
-                    ->send();
+                Notification::make()->title('Atenção')->body('Esta ação não está disponível no modo demo.')->danger()->send();
                 return;
             }
 
-            // Validação da senha de 2FA: Verifica se o campo 'admin_password' está presente
-            // e se o valor informado bate com o token definido em TOKEN_DE_2FA.
-            if (
-                !isset($this->data['admin_password']) ||
-                $this->data['admin_password'] !== env('TOKEN_DE_2FA')
-            ) {
-                Notification::make()
-                    ->title('Acesso Negado')
-                    ->body('A senha de 2FA está incorreta. Você não pode atualizar os dados.')
-                    ->danger()
-                    ->send();
+            if (!isset($this->data['admin_password']) || $this->data['admin_password'] !== env('TOKEN_DE_2FA')) {
+                Notification::make()->title('Acesso Negado')->body('A senha de 2FA está incorreta.')->danger()->send();
                 return;
             }
 
-            // Prossegue com a atualização ou criação dos dados
+            $saveData = [
+                // Credentials
+                'playfiver_code' => $this->data['playfiver_code'],
+                'playfiver_token' => $this->data['playfiver_token'],
+                'playfiver_secret' => $this->data['playfiver_secret'],
+                'max_api_code' => $this->data['max_api_code'],
+                'max_api_token' => $this->data['max_api_token'],
+                'max_api_secret' => $this->data['max_api_secret'],
+                'active_api' => $this->data['active_api'],
+                // PlayFiver agent config
+                'pf_rtp' => $this->data['pf_rtp'] ?? null,
+                'pf_limit_amount' => $this->data['pf_limit_amount'] ?? null,
+                'pf_limit_hours' => $this->data['pf_limit_hours'] ?? null,
+                'pf_limit_enable' => (bool) ($this->data['pf_limit_enable'] ?? false),
+                'pf_bonus_enable' => (bool) ($this->data['pf_bonus_enable'] ?? true),
+                // MAX API agent config
+                'max_rtp' => $this->data['max_rtp'] ?? null,
+                'max_limit_amount' => $this->data['max_limit_amount'] ?? null,
+                'max_limit_hours' => $this->data['max_limit_hours'] ?? null,
+                'max_limit_enable' => (bool) ($this->data['max_limit_enable'] ?? false),
+                'max_bonus_enable' => (bool) ($this->data['max_bonus_enable'] ?? true),
+            ];
+
             $setting = GamesKey::first();
             if (!empty($setting)) {
-                if ($setting->update($this->data)) {
-                    Notification::make()
-                        ->title('Sucesso')
-                        ->body('Suas chaves foram alteradas com sucesso!')
-                        ->success()
-                        ->send();
-                }
+                $setting->update($saveData);
             } else {
-                if (GamesKey::create($this->data)) {
-                    Notification::make()
-                        ->title('Sucesso')
-                        ->body('Suas chaves foram criadas com sucesso!')
-                        ->success()
-                        ->send();
-                }
+                GamesKey::create($saveData);
             }
+
+            Notification::make()->title('Sucesso')->body('Suas chaves foram salvas com sucesso!')->success()->send();
+
         } catch (Halt $exception) {
-            Notification::make()
-                ->title('Erro ao alterar dados!')
-                ->body('Erro ao alterar dados!')
-                ->danger()
-                ->send();
+            Notification::make()->title('Erro')->body('Erro ao alterar dados!')->danger()->send();
         }
     }
 
+    /**
+     * Fetch agent config from PlayFiver API.
+     */
+    private function getPlayFiverInfo(GamesKey $gamesKey): ?array
+    {
+        try {
+            $attrs = $gamesKey->getAttributes();
+            $response = Http::withOptions(['force_ip_resolve' => 'v4'])
+                ->get('https://api.playfivers.com/api/v2/agent', [
+                    'agentToken' => $attrs['playfiver_token'] ?? '',
+                    'secretKey' => $attrs['playfiver_secret'] ?? '',
+                ]);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                // Also persist to ConfigPlayFiver for legacy lock tracking
+                ConfigPlayFiver::create([
+                    'rtp' => $json['data']['rtp'] ?? null,
+                    'limit_enable' => $json['data']['limit_enable'] ?? false,
+                    'limit_amount' => $json['data']['limit_amount'] ?? null,
+                    'limit_hours' => $json['data']['limit_hours'] ?? null,
+                    'bonus_enable' => $json['data']['bonus_enable'] ?? true,
+                ]);
+                return $json['data'] ?? null;
+            }
+
+            return null;
+        } catch (Exception $e) {
+            Log::error('[GamesKeyPage] Erro ao buscar info da PlayFiver: ' . $e->getMessage());
+            return null;
+        }
+    }
 }
