@@ -31,7 +31,7 @@ class DepositController extends Controller
             case 'digitopay':
                 return self::requestQrcodeDigito($request);
             case 'ggpix':
-                return $this->getQRCodePix($request);
+                return self::requestQrcodeGgpix($request);
             case 'bspay':
                 return self::requestQrcodeBsPay($request);
         }

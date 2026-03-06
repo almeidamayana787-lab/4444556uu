@@ -98,18 +98,7 @@ class WalletController extends Controller
                 break;
 
             case 'ggpix':
-                $withdrawal = Withdrawal::find($id);
-                if ($tipo == "afiliado") {
-                    $withdrawal = AffiliateWithdraw::find($id);
-                }
-                if ($withdrawal) {
-                    $pixKey = $withdrawal->pix_key;
-                    $pixType = strtoupper($withdrawal->pix_type ?? 'CPF');
-                    $amount = $withdrawal->amount;
-                    $txid = 'GGPIXOUT_' . $withdrawal->id . '_' . time();
-                    $resultado = $this->ggpixPixOut((float) $amount, $pixKey, $pixType, $txid);
-                    $resultado = ($resultado['status'] === 'success');
-                }
+                $resultado = self::pixCashOutGgpix(['id' => $id, 'tipo' => $tipo]);
                 break;
 
             case 'bspay':
@@ -278,7 +267,7 @@ class WalletController extends Controller
             // Montagem do payload de criação do saque
             $data = [
                 'user_id' => $userId,
-                'amount' => \Helper::amountPrepare($request->amount),
+                'amount' => \App\Helpers\Core::amountPrepare($request->amount),
                 'type' => $request->type,
                 'currency' => $request->currency,
                 'symbol' => $request->symbol,
