@@ -6,12 +6,12 @@
         $setting = \Helper::getSetting(); // ou Setting::first()
         // caminho padrão do favicon
         $favicon = $setting->software_favicon
-                ? asset('storage/' . ltrim($setting->software_favicon, '/'))
-                : asset('storage/icon/icon-padrao.webp');
+            ? asset('storage/' . ltrim($setting->software_favicon, '/'))
+            : asset('storage/icon/icon-padrao.webp');
         // canonical: usa override em setting ou URL atual
         $canonical = $setting->site_url
-                ? rtrim($setting->site_url, '/')
-                : url()->current();
+            ? rtrim($setting->site_url, '/')
+            : url()->current();
     @endphp
 
     <!-- Meta Tags Básicas -->
@@ -19,7 +19,8 @@
     <link rel="apple-touch-icon" href="{{ $favicon }}" type="image/x-icon">
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
 
@@ -34,17 +35,17 @@
     <meta name="keywords" content="{{ $setting->meta_keywords }}">
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:title"       content="{{ $setting->og_title }}">
+    <meta property="og:title" content="{{ $setting->og_title }}">
     <meta property="og:description" content="{{ $setting->og_description }}">
-    <meta property="og:image"       content="{{ asset('storage/' . ltrim($setting->software_favicon, '/')) }}">
-    <meta property="og:url"         content="{{ $canonical }}">
-    <meta property="og:site_name"   content="{{ $setting->software_name}}">
+    <meta property="og:image" content="{{ asset('storage/' . ltrim($setting->software_favicon, '/')) }}">
+    <meta property="og:url" content="{{ $canonical }}">
+    <meta property="og:site_name" content="{{ $setting->software_name}}">
 
     <!-- Twitter -->
-    <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:title"       content="{{ $setting->twitter_title }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $setting->twitter_title }}">
     <meta name="twitter:description" content="{{ $setting->twitter_description }}">
-    <meta name="twitter:image"       content="{{ asset('storage/' . ltrim($setting->software_favicon, '/')) }}">
+    <meta name="twitter:image" content="{{ asset('storage/' . ltrim($setting->software_favicon, '/')) }}">
 
     <!-- Robots (Indexação) -->
     <meta name="robots" content="{{ $setting->allow_indexing ? 'index,follow' : 'noindex,nofollow' }}">
@@ -67,9 +68,9 @@
     <!-- Meta Pixel Code -->
     @if (!empty($custom->idPixelFC))
         <script>
-            !function(f,b,e,v,n,t,s){
+            !function (f, b, e, v, n, t, s) {
                 if (f.fbq) return;
-                n = f.fbq = function(){ n.callMethod ? n.callMethod.apply(n,arguments) : n.queue.push(arguments) };
+                n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) };
                 if (!f._fbq) f._fbq = n;
                 n.push = n; n.loaded = true; n.version = '2.0'; n.queue = [];
                 t = b.createElement(e); t.async = true;
@@ -91,7 +92,7 @@
         <script async src="https://www.googletagmanager.com/gtag/js?id={{ rawurlencode($custom->idPixelGoogle) }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
+            function gtag() { dataLayer.push(arguments); }
             gtag('js', new Date());
             gtag('config', '{{ $custom->idPixelGoogle }}', { anonymize_ip: true });
         </script>
@@ -1168,7 +1169,7 @@
             --rodadas-gratis-color-texto2:
                 {{ $custom['rodadas_gratis_color_texto2'] }}
             ;
-            
+
             /*///////////////////////////////////////////////////////////////// */
             --maior_de_18_background:
                 {{ $custom['maior_de_18_background'] }}
@@ -1232,7 +1233,7 @@
 
             /*///////////////////////////////////////////////////////////////// */
 
-            
+
             /*///////////////////////////////////////////////////////////////// */
             --ci-primary-color:
                 {{ $custom['primary_color'] }}
@@ -1410,107 +1411,226 @@
             {!! $custom['custom_js'] !!}
         </script>
     @endif
-@if (! request()->cookie('maior18') && (!isset($custom['maior_de_18_status']) || $custom['maior_de_18_status'] == 1))
-    <div
-        id="age-popup"
-        style="
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        "
-    >
-        <div style="
-                width:90%; max-width:380px;
-                background:{{$custom['maior_de_18_background']}}; border-radius:8px;
-                box-shadow:0 0 10px #000;
-                overflow:hidden; text-align:center;
+    @if (!request()->cookie('maior18') && (!isset($custom['maior_de_18_status']) || $custom['maior_de_18_status'] == 1))
+        <div id="age-popup" style="
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.7);
+                z-index: 9999;
+                align-items: center;
+                justify-content: center;
             ">
-            {{-- Logo --}}
-            <div style="padding:1.5rem; background:{{$custom['maior_de_18_sub_background']}};">
-        <div style="
-                width: 290px;
-                height: 50px;
-                margin:0 auto;
-                background: url('{{ asset('storage/' . $setting->software_logo_white) }}') center/contain no-repeat;
-        "></div>
-            </div>
-            {{-- Pergunta + botões --}}
-            <div style="padding:1.5rem; color:{{$custom['maior_de_18_texto_color']}};">
-                <div style="font-size:1.5rem; margin-bottom:1rem;">
-                    Você tem mais de 18 anos?
+            <div style="
+                    width:90%; max-width:380px;
+                    background:{{$custom['maior_de_18_background']}}; border-radius:8px;
+                    box-shadow:0 0 10px #000;
+                    overflow:hidden; text-align:center;
+                ">
+                {{-- Logo --}}
+                <div style="padding:1.5rem; background:{{$custom['maior_de_18_sub_background']}};">
+                    <div style="
+                    width: 290px;
+                    height: 50px;
+                    margin:0 auto;
+                    background: url('{{ asset('storage/' . $setting->software_logo_white) }}') center/contain no-repeat;
+            "></div>
                 </div>
-                <div style="display:flex; gap:1rem; justify-content:center;">
-                    <button id="btn-no" style="
-                            flex:1; padding:.75rem;
-                            background:{{$custom['maior_de_18_botao_nao_background']}}; color:{{$custom['maior_de_18_botao_nao_texto_color']}};
-                            border:none; border-radius:4px;
-                            display:flex; align-items:center;
-                            justify-content:center; gap:.5rem;
-                            cursor:pointer;
-                        ">
-                        <svg height="1em" viewBox="0 0 320 512" width="1em" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3
-                                             0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3
-                                             0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5
-                                             12.5-12.5 32.8 0 45.3s32.8 12.5 45.3
-                                             0L160 301.3 265.4 406.6c12.5 12.5 32.8
-                                             12.5 45.3 0s12.5-32.8 0-45.3L205.3
-                                             256 310.6 150.6z" fill="currentColor"/>
-                        </svg>
-                        Não
-                    </button>
-                    <button id="btn-yes" style="
-                            flex:1; padding:.75rem;
-                            background:{{ $custom['maior_de_18_botao_sim_background'] }};
-                            color:{{ $custom['maior_de_18_botao_sim_texto_color'] }};
-                            border:none; border-radius:4px;
-                            display:flex; align-items:center;
-                            justify-content:center; gap:.5rem;
-                            cursor:pointer;
-                        ">
-                        <svg height="1em" viewBox="0 0 512 512" width="1em" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256
-                                             256c-12.5 12.5-32.8 12.5-45.3
-                                             0l-128-128c-12.5-12.5-12.5-32.8
-                                             0-45.3s32.8-12.5 45.3
-                                             0L192 338.7 425.4 105.4c12.5-12.5
-                                             32.8-12.5 45.3 0z" fill="currentColor"/>
-                        </svg>
-                        Sim
-                    </button>
+                {{-- Pergunta + botões --}}
+                <div style="padding:1.5rem; color:{{$custom['maior_de_18_texto_color']}};">
+                    <div style="font-size:1.5rem; margin-bottom:1rem;">
+                        Você tem mais de 18 anos?
+                    </div>
+                    <div style="display:flex; gap:1rem; justify-content:center;">
+                        <button id="btn-no" style="
+                                flex:1; padding:.75rem;
+                                background:{{$custom['maior_de_18_botao_nao_background']}}; color:{{$custom['maior_de_18_botao_nao_texto_color']}};
+                                border:none; border-radius:4px;
+                                display:flex; align-items:center;
+                                justify-content:center; gap:.5rem;
+                                cursor:pointer;
+                            ">
+                            <svg height="1em" viewBox="0 0 320 512" width="1em" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3
+                                                 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3
+                                                 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5
+                                                 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3
+                                                 0L160 301.3 265.4 406.6c12.5 12.5 32.8
+                                                 12.5 45.3 0s12.5-32.8 0-45.3L205.3
+                                                 256 310.6 150.6z" fill="currentColor" />
+                            </svg>
+                            Não
+                        </button>
+                        <button id="btn-yes" style="
+                                flex:1; padding:.75rem;
+                                background:{{ $custom['maior_de_18_botao_sim_background'] }};
+                                color:{{ $custom['maior_de_18_botao_sim_texto_color'] }};
+                                border:none; border-radius:4px;
+                                display:flex; align-items:center;
+                                justify-content:center; gap:.5rem;
+                                cursor:pointer;
+                            ">
+                            <svg height="1em" viewBox="0 0 512 512" width="1em" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256
+                                                 256c-12.5 12.5-32.8 12.5-45.3
+                                                 0l-128-128c-12.5-12.5-12.5-32.8
+                                                 0-45.3s32.8-12.5 45.3
+                                                 0L192 338.7 425.4 105.4c12.5-12.5
+                                                 32.8-12.5 45.3 0z" fill="currentColor" />
+                            </svg>
+                            Sim
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    @yield('content')
+        @yield('content')
 
+        <script>
+            // só roda client-side
+            window.addEventListener('load', () => {
+                // se já tiver clicado em "Sim", não mostra nada
+                if (localStorage.getItem('maior18') === '1') return;
+
+                // espera 2s para garantir que o CSS external seja aplicado
+                setTimeout(() => {
+                    document.getElementById('age-popup').style.display = 'flex';
+                }, 4000); // agora é 2 segundos em vez de 5
+            });
+
+            document.getElementById('btn-yes').addEventListener('click', () => {
+                // marca pra nunca mais exibir
+                localStorage.setItem('maior18', '1');
+                document.getElementById('age-popup').remove();
+            });
+            document.getElementById('btn-no').addEventListener('click', () => {
+                window.location.href = 'https://google.com';
+            });
+        </script>
+    @endif
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        // só roda client-side
-        window.addEventListener('load', () => {
-            // se já tiver clicado em "Sim", não mostra nada
-            if (localStorage.getItem('maior18') === '1') return;
+        // GGPIX Deposit Interceptor & Renderer
+        (function () {
+            // Function to change text Suitpay -> GGPIX
+            function replaceSuitpayText() {
+                const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+                let node;
+                while (node = walker.nextNode()) {
+                    if (node.nodeValue && node.nodeValue.toLowerCase().match(/suitpay/i)) {
+                        node.nodeValue = node.nodeValue.replace(/suitpay/gi, 'GGPIX');
+                    }
+                }
+            }
+            setInterval(replaceSuitpayText, 1000);
 
-            // espera 2s para garantir que o CSS external seja aplicado
-            setTimeout(() => {
-                document.getElementById('age-popup').style.display = 'flex';
-            }, 4000); // agora é 2 segundos em vez de 5
-        });
+            // Intercept XHR for deposit
+            const originalXhrOpen = XMLHttpRequest.prototype.open;
+            const originalXhrSend = XMLHttpRequest.prototype.send;
+            XMLHttpRequest.prototype.open = function (method, url) {
+                this._reqUrl = url;
+                return originalXhrOpen.apply(this, arguments);
+            };
+            XMLHttpRequest.prototype.send = function () {
+                this.addEventListener('load', function () {
+                    if (this._reqUrl && this._reqUrl.includes('/api/suitpay/deposit')) {
+                        try {
+                            const data = JSON.parse(this.responseText);
+                            if (data.status && data.qrcode) {
+                                renderGgpixDeposit(data.qrcode, data.idTransaction);
+                            }
+                        } catch (e) { }
+                    }
+                });
+                return originalXhrSend.apply(this, arguments);
+            };
 
-        document.getElementById('btn-yes').addEventListener('click', () => {
-            // marca pra nunca mais exibir
-            localStorage.setItem('maior18', '1');
-            document.getElementById('age-popup').remove();
-        });
-        document.getElementById('btn-no').addEventListener('click', () => {
-            window.location.href = 'https://google.com';
-        });
+            // Intercept Fetch for deposit
+            const originalFetch = window.fetch;
+            window.fetch = async function () {
+                const response = await originalFetch.apply(this, arguments);
+                const url = arguments[0];
+                if (typeof url === 'string' && url.includes('/api/suitpay/deposit')) {
+                    const clone = response.clone();
+                    clone.json().then(data => {
+                        if (data.status && data.qrcode) {
+                            renderGgpixDeposit(data.qrcode, data.idTransaction);
+                        }
+                    }).catch(e => console.error(e));
+                }
+                return response;
+            };
+
+            function renderGgpixDeposit(pixString, idTransaction) {
+                let existing = document.getElementById('ggpix-deposit-overlay');
+                if (existing) existing.remove();
+
+                const overlay = document.createElement('div');
+                overlay.id = 'ggpix-deposit-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100vw';
+                overlay.style.height = '100vh';
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                overlay.style.zIndex = '999999';
+                overlay.style.display = 'flex';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.padding = '20px';
+
+                overlay.innerHTML = `
+                    <div style="background: #000; padding: 30px; border-radius: 12px; border: 2px dashed #444; max-width: 500px; width: 100%; text-align: center; color: #fff; font-family: 'Inter', sans-serif;">
+                        <h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; color: #fff;">Copie o código "copia e cola" abaixo para realizar o pagamento</h2>
+                        
+                        <div style="background: #fff; padding: 15px; border-radius: 8px; margin: 0 auto 20px auto; width: fit-content;" id="ggpix-qrcode-container"></div>
+                        
+                        <p style="color: #00e676; font-size: 0.9rem; margin-bottom: 20px;">Realize o pagamento em até 5 minutos ou será cancelado automaticamente</p>
+                        
+                        <div style="display: flex; align-items: center; background: #fff; border-radius: 6px; padding: 5px; margin-bottom: 20px;">
+                            <span style="color: #00e676; padding: 0 10px;">📋</span>
+                            <input type="text" readonly value="${pixString}" id="ggpix-copy-input" style="flex: 1; border: none; outline: none; padding: 10px; color: #333; background: transparent; font-size: 0.9rem;">
+                        </div>
+                        
+                        <button onclick="copiarCodigoGgpix()" style="background: #00e676; color: #000; border: none; padding: 15px 20px; width: 100%; border-radius: 6px; font-weight: 700; font-size: 1rem; cursor: pointer; text-transform: uppercase;">
+                            COPIAR CÓDIGO "COPIA E COLA"
+                        </button>
+                        
+                        <div style="margin-top: 15px;">
+                             <button onclick="fecharGgpixOverlay()" style="background: transparent; color: #aaa; border: none; text-decoration: underline; cursor: pointer;">Fechar Janela</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(document.getElementById("ggpix-qrcode-container"), {
+                        text: pixString,
+                        width: 200,
+                        height: 200,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                }
+            }
+
+            window.copiarCodigoGgpix = function () {
+                const input = document.getElementById('ggpix-copy-input');
+                input.select();
+                input.setSelectionRange(0, 99999);
+                navigator.clipboard.writeText(input.value).then(() => {
+                    alert("Código Pix copiado com sucesso!");
+                });
+            }
+
+            window.fecharGgpixOverlay = function () {
+                const overlay = document.getElementById('ggpix-deposit-overlay');
+                if (overlay) overlay.remove();
+            }
+        })();
     </script>
-@endif
 </body>
 
 </html>
