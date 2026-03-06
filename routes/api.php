@@ -126,25 +126,32 @@ Route::group(['middleware' => ['auth.jwt']], function () {
 
 });
 
-Route::prefix('carteira_wallet')
-    ->group(function () {
-        include_once(__DIR__ . '/groups/api/wallet/deposit.php');
-        include_once(__DIR__ . '/groups/api/wallet/withdraw.php');
-    });
-
 Route::group(['middleware' => ['auth.jwt']], function () {
+    Route::prefix('carteira_wallet')
+        ->group(function () {
+            include_once(__DIR__ . '/groups/api/wallet/deposit.php');
+            include_once(__DIR__ . '/groups/api/wallet/withdraw.php');
+        });
 });
-
 
 Route::prefix('categories')
     ->group(function () {
         include_once(__DIR__ . '/groups/api/categories/index.php');
-        ;
     });
 
 include_once(__DIR__ . '/groups/api/games/index.php');
 include_once(__DIR__ . '/groups/api/gateways/suitpay.php');
 include_once(__DIR__ . '/groups/api/gateways/ggpix.php');
+
+// LOG GLOBAL PARA DEPURAR (deve ser a última)
+Route::match(['get', 'post', 'put', 'delete', 'patch'], '{any}', function (Request $request) {
+    Log::info('[API DEBUG GLOBAL] Rota interceptada no final do arquivo', [
+        'url' => $request->fullUrl(),
+        'method' => $request->method(),
+    ]);
+    return response()->json(['error' => 'Route not found'], 404);
+})->where('any', '.*');
+
 
 Route::prefix('pesquisar_games')
     ->group(function () {
