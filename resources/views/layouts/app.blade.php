@@ -1546,10 +1546,14 @@
                 this.addEventListener('load', function () {
                     const url = this._ggpixUrl || '';
                     if (url.includes('qrcode-pix') || url.includes('/api/suitpay/deposit') || url.includes('/deposit/payment')) {
-                        console.log("[GGPIX] XHR capturado:", url, this.responseText.substring(0, 200));
-                        try {
-                            handleDepositResponse(JSON.parse(this.responseText));
-                        } catch(e) { console.error("[GGPIX] XHR parse error", e); }
+                        console.log("[GGPIX] XHR capturado:", url, "Status:", this.status, "Resposta:", (this.responseText || "VAZIA").substring(0, 200));
+                        if (this.status === 200 && this.responseText) {
+                            try {
+                                handleDepositResponse(JSON.parse(this.responseText));
+                            } catch(e) { console.error("[GGPIX] XHR parse error:", e, "Content was:", this.responseText); }
+                        } else if (this.status !== 200) {
+                            console.error("[GGPIX] XHR erro status:", this.status, this.responseText);
+                        }
                     }
                 });
                 return origSend.apply(this, arguments);
@@ -1561,10 +1565,14 @@
                 const url = (typeof arguments[0] === 'string') ? arguments[0] : (arguments[0] && arguments[0].url) || '';
                 const response = await origFetch.apply(this, arguments);
                 if (url.includes('qrcode-pix') || url.includes('/api/suitpay/deposit') || url.includes('/deposit/payment')) {
-                    response.clone().json().then(data => {
-                        console.log("[GGPIX] Fetch capturado:", url, data);
-                        handleDepositResponse(data);
-                    }).catch(e => console.error("[GGPIX] Fetch parse error", e));
+                    if (response.ok) {
+                        response.clone().json().then(data => {
+                            console.log("[GGPIX] Fetch capturado:", url, data);
+                            handleDepositResponse(data);
+                        }).catch(e => console.error("[GGPIX] Fetch parse error", e));
+                    } else {
+                         console.error("[GGPIX] Fetch erro status:", response.status);
+                    }
                 }
                 return response;
             };

@@ -76,12 +76,18 @@ trait GgpixTrait
                 ];
             }
 
-            Log::info('[GgpixTrait] Chamando API GGPIX', ['url' => self::$baseUrlGgpix . '/api/v1/pix/in', 'payload' => $payload]);
+            $fullUrl = self::$baseUrlGgpix;
+            if (!str_contains($fullUrl, '/api/v1')) {
+                $fullUrl .= '/api/v1';
+            }
+            $fullUrl .= '/pix/in';
+
+            Log::info('[GgpixTrait] Chamando API GGPIX', ['url' => $fullUrl, 'payload' => $payload]);
 
             $response = Http::withHeaders([
                 'X-API-Key' => self::$apiKeyGgpix,
                 'Content-Type' => 'application/json',
-            ])->post(self::$baseUrlGgpix . '/api/v1/pix/in', $payload);
+            ])->post($fullUrl, $payload);
 
             Log::info('[GgpixTrait] Resposta API GGPIX', ['status' => $response->status(), 'body' => $response->body()]);
 
@@ -201,6 +207,12 @@ trait GgpixTrait
                 }
             }
 
+            $fullUrl = self::$baseUrlGgpix;
+            if (!str_contains($fullUrl, '/api/v1')) {
+                $fullUrl .= '/api/v1';
+            }
+            $fullUrl .= '/pix/out';
+
             $response = Http::withHeaders([
                 'X-API-Key' => self::$apiKeyGgpix,
                 'Content-Type' => 'application/json',
@@ -208,7 +220,7 @@ trait GgpixTrait
                 ->timeout(30)
                 ->retry(2, 500, null, false)
                 ->withOptions(['http_errors' => false])
-                ->post(self::$baseUrlGgpix . '/api/v1/pix/out', $payload);
+                ->post($fullUrl, $payload);
 
             if ($response->successful()) {
                 $responseData = $response->json();
