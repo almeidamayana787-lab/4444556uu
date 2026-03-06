@@ -55,6 +55,9 @@ class Gateway extends Model
         'bspay_cliente_id',
         'bspay_cliente_secret',
 
+        // GGPIX
+        'ggpix_uri',
+        'ggpix_key',
     ];
 
     protected $hidden = array('updated_at');
@@ -113,6 +116,13 @@ class Gateway extends Model
      * Get the user's first name.
      */
     protected function stripeSecretKey(): Attribute
+    {
+        return Attribute::make(
+            get: fn(?string $value) => env('APP_DEMO') ? '*********************' : $value,
+        );
+    }
+
+    protected function ggpixKey(): Attribute
     {
         return Attribute::make(
             get: fn(?string $value) => env('APP_DEMO') ? '*********************' : $value,

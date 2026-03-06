@@ -64,7 +64,7 @@ class Setting extends Model
         /// campos do pagamento
         'suitpay_is_enable',
         'digito_is_enable',
-        'ondapay_is_enable',
+        'ggpix_is_enable',
         'ezzepay_is_enable',
 
         'stripe_is_enable',
@@ -91,7 +91,7 @@ class Setting extends Model
         'meta_keywords',
         'og_title',
         'og_description',
-       
+
         'twitter_title',
         'twitter_description',
         'allow_indexing',

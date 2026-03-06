@@ -8,14 +8,14 @@ use App\Models\Transaction;
 use App\Traits\Gateways\DigitoPayTrait;
 use App\Traits\Gateways\EzzepayTrait;
 use App\Traits\Gateways\BsPayTrait;
-use App\Traits\Gateways\OndaPayTrait;
+use App\Traits\Gateways\GgpixTrait;
 use App\Traits\Gateways\SuitpayTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class DepositController extends Controller
 {
-    use SuitpayTrait, DigitoPayTrait, EzzepayTrait, BsPayTrait, OndaPayTrait;
+    use SuitpayTrait, DigitoPayTrait, EzzepayTrait, BsPayTrait, GgpixTrait;
 
     /**
      * @param Request $request
@@ -30,8 +30,8 @@ class DepositController extends Controller
                 return self::requestQrcodeEzze($request);
             case 'digitopay':
                 return self::requestQrcodeDigito($request);
-            case 'ondapay':
-                return self::requestQrCodeOnda($request);
+            case 'ggpix':
+                return $this->getQRCodePix($request);
             case 'bspay':
                 return self::requestQrcodeBsPay($request);
         }

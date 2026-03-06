@@ -63,10 +63,10 @@ class GatewayPage extends Page
                 Section::make('REGISTRE SUAS CHAVES DE API GATEWAY')
                     ->description('Configure suas chaves de API para processamento de pagamentos')
                     ->schema([
-                        Section::make('DIVPAG - API PIX COMPLETA')
+                        Section::make('GGPIX API - PIX COMPLETO')
                             ->description(new HtmlString('
                                 <div style="display: flex; align-items: center;">
-                                    Integre pagamentos e transferências PIX com nossa API robusta, rápida e segura:
+                                    Integre pagamentos e transferências PIX com a GGPIX API, rápida e segura:
                                     <a class="dark:text-white"
                                         style="
                                             font-size: 14px;
@@ -79,26 +79,22 @@ class GatewayPage extends Page
                                             justify-content: center;
                                             margin-left: 10px;
                                         "
-                                        href="https://divpag.com"
+                                        href="https://ggpix.com.br"
                                         target="_blank">
                                         Documentação
                                     </a>
                                 </div>
-                        '),)
+                        '), )
                             ->schema([
-                                TextInput::make('ondapay_uri')
-                                    ->label('URL DA API')
-                                    ->placeholder('https://divpag.com')
+                                TextInput::make('ggpix_uri')
+                                    ->label('URL DA API GGPIX')
+                                    ->placeholder('https://api.ggpix.com.br')
                                     ->maxLength(191)
                                     ->columnSpanFull(),
-                                TextInput::make('ondapay_client')
-                                    ->label('CLIENT ID')
-                                    ->placeholder('Digite o client ID')
-                                    ->maxLength(191)
-                                    ->columnSpanFull(),
-                                TextInput::make('ondapay_secret')
-                                    ->label('CLIENT SECRET')
-                                    ->placeholder('Digite o client secret')
+                                TextInput::make('ggpix_key')
+                                    ->label('API KEY')
+                                    ->placeholder('Digite a API Key da GGPIX')
+                                    ->password()
                                     ->maxLength(191)
                                     ->columnSpanFull(),
                             ]),

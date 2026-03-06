@@ -33,7 +33,7 @@ class PaymentSetting extends Page implements HasForms
     public Setting $record;
     public ?array $data = [];
 
-    public function getTitle(): string | Htmlable
+    public function getTitle(): string|Htmlable
     {
         return __('AREA FINANCEIRA');
     }
@@ -109,7 +109,7 @@ class PaymentSetting extends Page implements HasForms
                         Select::make("saque")
                             ->label("RESPONSAVEL PELO SISTEMA DE SAQUE")
                             ->options([
-                                "ondapay" => "Divpag"
+                                "ggpix" => "GGPIX API"
                             ]),
                         TextInput::make('min_deposit')
                             ->label('DEPÓSITO MÍNIMO')
@@ -135,8 +135,8 @@ class PaymentSetting extends Page implements HasForms
                         Section::make('GATEWAY DE PAGAMENTO')
                             ->description('Ative ou desative o gateway de pagamento.')
                             ->schema([
-                                Toggle::make('ondapay_is_enable')
-                                    ->label('Divpag - API PIX Completa'),
+                                Toggle::make('ggpix_is_enable')
+                                    ->label('GGPIX API - PIX Completo'),
                             ])->columns(1),
                     ])->columns(2)
             ])

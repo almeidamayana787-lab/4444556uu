@@ -14,7 +14,7 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         'api/*',
         'suitpay/*',
-        'ondapay/*',
+        'ggpix/*',
         'vgames/*',
         'webhooks/*',
         'cron/*',

@@ -69,6 +69,8 @@ class GamesKeyPage extends Page implements HasForms
                 'max_api_code' => $gamesKey->max_api_code,
                 'max_api_token' => $gamesKey->max_api_token,
                 'max_api_secret' => $gamesKey->max_api_secret,
+                // Active API
+                'active_api' => $gamesKey->active_api,
             ]);
         }
         if ($infos) {
@@ -101,6 +103,18 @@ class GamesKeyPage extends Page implements HasForms
 
         return $form
             ->schema([
+                Section::make('CONFIGURAÇÃO GLOBAL DA API')
+                    ->description('Selecione qual provedor de jogos você deseja que seja o padrão ativo. Ao trocar, as chamadas para obter jogos e criar usuários ocorrerão apenas na opção ativa.')
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('active_api')
+                            ->label('API Ativa de Jogos')
+                            ->options([
+                                'playfiver' => 'PlayFiver / Funciona com Painel Playfiver',
+                                'max_api' => 'MAX API GAMES / Apenas a Max API Games'
+                            ])
+                            ->required()
+                            ->default('playfiver'),
+                    ]),
                 Section::make('PLAYFIVER API')
                     ->description(new \Illuminate\Support\HtmlString('
                     <div style="display: flex; align-items: center;">
@@ -230,33 +244,47 @@ class GamesKeyPage extends Page implements HasForms
     {
         try {
             $setting = GamesKey::first();
+            $activeApi = $this->data['active_api'] ?? $setting?->active_api ?? 'playfiver';
 
-            $response = Http::withOptions([
-                'force_ip_resolve' => 'v4', // Forçar IPv4
-            ])->put('https://api.playfivers.com/api/v2/agent', [
-                        'agentToken' => $setting->playfiver_token,
-                        'secretKey' => $setting->playfiver_secret,
-                        "rtp" => $this->data['rtp'],
-                        "limit_enable" => $this->data['limit_enable'],
-                        "limite_amount" => $this->data['limit_amount'],
-                        "limit_hours" => $this->data['limit_hours'],
-                        "bonus_enable" => $this->data['bonus_enable']
-                    ]);
+            // Só chama a API da PlayFiver se ela for a API ativa
+            if ($activeApi === 'playfiver') {
+                $response = Http::withOptions([
+                    'force_ip_resolve' => 'v4',
+                ])->put('https://api.playfivers.com/api/v2/agent', [
+                            'agentToken' => $setting->playfiver_token,
+                            'secretKey' => $setting->playfiver_secret,
+                            'rtp' => $this->data['rtp'],
+                            'limit_enable' => $this->data['limit_enable'],
+                            'limite_amount' => $this->data['limit_amount'],
+                            'limit_hours' => $this->data['limit_hours'],
+                            'bonus_enable' => $this->data['bonus_enable'],
+                        ]);
 
-            if ($response->successful()) {
-                ConfigPlayFiver::latest('id')->update(["edit" => true]);
-                return redirect("/admin/chaves-dos-jogos");
+                if ($response->successful()) {
+                    ConfigPlayFiver::latest('id')->update(["edit" => true]);
+                    return redirect("/admin/chaves-dos-jogos");
+                }
+
+                Notification::make()
+                    ->title('Atenção')
+                    ->body('Ocorreu um erro ao tentar atualizar os dados da playfiver')
+                    ->danger()
+                    ->send();
+
+                return;
             }
 
+            // Para max_api, apenas informa que foi salvo com sucesso
             Notification::make()
-                ->title('Atenção')
-                ->body('Ocorreu um erro ao tentar atualizar os dados da playfiver')
-                ->danger()
+                ->title('MAX API GAMES ativa')
+                ->body('As configurações são controladas apenas no painel MAX API GAMES.')
+                ->success()
                 ->send();
+
         } catch (Exception $e) {
             Notification::make()
                 ->title('Atenção')
-                ->body('Ocorreu um erro ao tentar atualizar os dados da playfiver')
+                ->body('Ocorreu um erro ao tentar atualizar os dados: ' . $e->getMessage())
                 ->danger()
                 ->send();
         }

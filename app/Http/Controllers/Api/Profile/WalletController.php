@@ -15,7 +15,7 @@ use App\Notifications\NewWithdrawalNotification;
 use App\Traits\Gateways\DigitoPayTrait;
 use App\Traits\Gateways\BsPayTrait;
 use App\Traits\Gateways\EzzepayTrait;
-use App\Traits\Gateways\OndaPayTrait;
+use App\Traits\Gateways\GgpixTrait;
 use App\Traits\Gateways\SuitpayTrait;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Validator;
 
 class WalletController extends Controller
 {
-    use DigitoPayTrait, EzzepayTrait, BsPayTrait, SuitpayTrait, OndaPayTrait;
+    use DigitoPayTrait, EzzepayTrait, BsPayTrait, SuitpayTrait, GgpixTrait;
 
     public function index()
     {
@@ -78,17 +78,17 @@ class WalletController extends Controller
 
                 $suitpayment = SuitPayPayment::create([
                     'withdrawal_id' => $withdrawal->id,
-                    'user_id'       => $withdrawal->user_id,
-                    'pix_key'       => $withdrawal->pix_key,
-                    'pix_type'      => $withdrawal->pix_type,
-                    'amount'        => $withdrawal->amount,
-                    'observation'   => 'Saque direto',
+                    'user_id' => $withdrawal->user_id,
+                    'pix_key' => $withdrawal->pix_key,
+                    'pix_type' => $withdrawal->pix_type,
+                    'amount' => $withdrawal->amount,
+                    'observation' => 'Saque direto',
                 ]);
                 $parm = [
-                    'pix_key'           => $withdrawal->pix_key,
-                    'pix_type'          => $withdrawal->pix_type,
-                    'amount'            => $withdrawal->amount,
-                    'suitpayment_id'    => $suitpayment->id
+                    'pix_key' => $withdrawal->pix_key,
+                    'pix_type' => $withdrawal->pix_type,
+                    'amount' => $withdrawal->amount,
+                    'suitpayment_id' => $suitpayment->id
                 ];
                 $resultado = self::pixCashOut($parm);
                 break;
@@ -97,8 +97,19 @@ class WalletController extends Controller
                 $resultado = self::pixCashOutDigito($id, $tipo);
                 break;
 
-            case 'ondapay':
-                $resultado = self::pixCashOutOnda($id, $tipo);
+            case 'ggpix':
+                $withdrawal = Withdrawal::find($id);
+                if ($tipo == "afiliado") {
+                    $withdrawal = AffiliateWithdraw::find($id);
+                }
+                if ($withdrawal) {
+                    $pixKey = $withdrawal->pix_key;
+                    $pixType = strtoupper($withdrawal->pix_type ?? 'CPF');
+                    $amount = $withdrawal->amount;
+                    $txid = 'GGPIXOUT_' . $withdrawal->id . '_' . time();
+                    $resultado = $this->ggpixPixOut((float) $amount, $pixKey, $pixType, $txid);
+                    $resultado = ($resultado['status'] === 'success');
+                }
                 break;
 
             case 'bspay':
@@ -185,7 +196,7 @@ class WalletController extends Controller
             $rules = [];
             if ($request->type === 'pix') {
                 $rules = [
-                    'amount'   => ['required', 'numeric', 'min:' . $setting->min_withdrawal, 'max:' . $setting->max_withdrawal],
+                    'amount' => ['required', 'numeric', 'min:' . $setting->min_withdrawal, 'max:' . $setting->max_withdrawal],
                     'pix_type' => 'required',
                 ];
 
@@ -266,19 +277,19 @@ class WalletController extends Controller
 
             // Montagem do payload de criação do saque
             $data = [
-                'user_id'  => $userId,
-                'amount'   => \Helper::amountPrepare($request->amount),
-                'type'     => $request->type,
+                'user_id' => $userId,
+                'amount' => \Helper::amountPrepare($request->amount),
+                'type' => $request->type,
                 'currency' => $request->currency,
-                'symbol'   => $request->symbol,
-                'status'   => 0,
-                'cpf'      => $request->cpf,
+                'symbol' => $request->symbol,
+                'status' => 0,
+                'cpf' => $request->cpf,
                 // Nome vindo direto do banco pelo user_id:
-                'name'     => $userName, // sem fallback esquisito
+                'name' => $userName, // sem fallback esquisito
             ];
 
             if ($request->type === 'pix') {
-                $data['pix_key']  = $request->pix_key;
+                $data['pix_key'] = $request->pix_key;
                 $data['pix_type'] = $request->pix_type;
             }
 
@@ -295,7 +306,7 @@ class WalletController extends Controller
                 }
 
                 return response()->json([
-                    'status'  => true,
+                    'status' => true,
                     'message' => 'Saque realizado com sucesso',
                 ], 200);
             }

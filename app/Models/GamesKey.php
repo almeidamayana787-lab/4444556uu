@@ -31,7 +31,8 @@ class GamesKey extends Model
         // MAX API GAMES
         'max_api_code',
         'max_api_token',
-        'max_api_secret'
+        'max_api_secret',
+        'active_api'
     ];
 
     protected $hidden = ['updated_at'];
