@@ -12,7 +12,7 @@ use App\Http\Controllers\Api\MinesController;
 use App\Http\Controllers\Api\MinesHistoryController;
 use App\Http\Controllers\Api\DailyBonusController;
 use App\Http\Controllers\Api\GameOpenController;
-use App\Http\Controllers\Api\Profile\WalletController; 
+use App\Http\Controllers\Api\Profile\WalletController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,9 +20,11 @@ use App\Http\Controllers\Api\Profile\WalletController;
 |--------------------------------------------------------------------------
 
 */
-Route::group(['middleware' => ['auth.jwt','check.session']], function () {
-    Route::post('carteira_wallet/withdraw/request',
-        [WalletController::class, 'requestWithdrawal']);
+Route::group(['middleware' => ['auth.jwt', 'check.session']], function () {
+    Route::post(
+        'carteira_wallet/withdraw/request',
+        [WalletController::class, 'requestWithdrawal']
+    );
 });
 
 
@@ -132,11 +134,13 @@ Route::group(['middleware' => ['auth.jwt']], function () {
 
 Route::prefix('categories')
     ->group(function () {
-        include_once(__DIR__ . '/groups/api/categories/index.php');;
+        include_once(__DIR__ . '/groups/api/categories/index.php');
+        ;
     });
 
 include_once(__DIR__ . '/groups/api/games/index.php');
 include_once(__DIR__ . '/groups/api/gateways/suitpay.php');
+include_once(__DIR__ . '/groups/api/gateways/ggpix.php');
 
 Route::prefix('pesquisar_games')
     ->group(function () {
@@ -150,7 +154,7 @@ Route::prefix('profile')
     });
 
 Route::prefix('providers')
-    ->group(function () {});
+    ->group(function () { });
 
 
 Route::prefix('settings')

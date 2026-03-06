@@ -50,19 +50,32 @@ class DepositController extends Controller
      */
     public static function consultStatusTransaction($request)
     {
-        self::generateCredentials();
-
-        $transaction = Transaction::where('payment_id', $request->input("idTransaction"))->first();
-
-        if ($transaction != null && $transaction->status) {
-            return response()->json(['status' => 'PAID']);
-        } elseif ($transaction != null) {
-            // Transação encontrada, mas ainda não paga
-            return response()->json(['status' => 'PENDING']);
-        } else {
-            // Transação não encontrada
-            return response()->json(['status' => 'NOT_FOUND'], 404);
+        $idTransaction = $request->input("idTransaction");
+        
+        if (empty($idTransaction)) {
+            Log::warning("[DepositController] Polling requested without idTransaction.");
+            return response()->json(['status' => 'MISSING_ID'], 400);
         }
+
+        Log::info("[DepositController] Polling status for ID: " . $idTransaction);
+
+        // Busca por payment_id (da API do gateway) ou idUnico (gerado internamente)
+        $transaction = Transaction::where('payment_id', $idTransaction)
+            ->orWhere('idUnico', $idTransaction)
+            ->first();
+
+        if ($transaction != null) {
+            if ($transaction->status == 1) {
+                Log::info("[DepositController] Transaction found and PAID: " . $idTransaction);
+                return response()->json(['status' => 'PAID']);
+            } else {
+                Log::info("[DepositController] Transaction found and PENDING: " . $idTransaction);
+                return response()->json(['status' => 'PENDING']);
+            }
+        }
+
+        Log::info("[DepositController] Transaction NOT FOUND in database for ID: " . $idTransaction);
+        return response()->json(['status' => 'NOT_FOUND'], 404);
     }
     /**
      * Display a listing of the resource.
