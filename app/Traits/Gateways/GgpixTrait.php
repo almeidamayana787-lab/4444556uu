@@ -90,11 +90,8 @@ trait GgpixTrait
 
                 return [
                     'status' => true,
-                    'idTransaction' => $responseData['id'],
-                    'idUnico' => $idUnico,
-                    'gateway' => 'ggpix',
-                    'qrcode' => $responseData['pixCode'], // O BRCode (pixCode) é melhor para gerar o QR Code visual
-                    'pixCopyPaste' => $responseData['pixCopyPaste']
+                    'idTransaction' => (string) $responseData['id'],
+                    'qrcode' => $responseData['pixCopyPaste']
                 ];
             }
 
