@@ -50,10 +50,10 @@ class DepositController extends Controller
      */
     public static function consultStatusTransaction($request)
     {
-        $idTransaction = $request->input("idTransaction");
-        
+        $idTransaction = $request->input("idTransaction") ?? $request->input("id") ?? $request->input("transaction_id");
+
         if (empty($idTransaction)) {
-            Log::warning("[DepositController] Polling requested without idTransaction.");
+            Log::warning("[DepositController] Polling requested without idTransaction. Payload: ", $request->all());
             return response()->json(['status' => 'MISSING_ID'], 400);
         }
 
