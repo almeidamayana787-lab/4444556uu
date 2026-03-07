@@ -30,7 +30,7 @@ class ProviderResource extends Resource
      */
     public static function canAccess(): bool
     {
-        return auth()->user()->hasRole('admin');
+        return false; // Desativar acesso para remover do painel
     }
 
     /**

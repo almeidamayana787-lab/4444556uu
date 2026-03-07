@@ -61,6 +61,8 @@ class GamesKeyPage extends Page implements HasForms
                 'max_api_code' => $gamesKey->max_api_code,
                 'max_api_token' => $gamesKey->max_api_token,
                 'max_api_secret' => $gamesKey->max_api_secret,
+                'max_api_agent_code' => $gamesKey->max_api_agent_code,
+                'max_api_agent_token' => $gamesKey->max_api_agent_token,
                 'active_api' => $gamesKey->active_api ?? 'playfiver',
 
                 // PlayFiver agent config — load from DB (persisted)
@@ -229,6 +231,19 @@ class GamesKeyPage extends Page implements HasForms
                                     ->maxLength(191),
                             ])->columns(3),
 
+                        Section::make('CREDENCIAIS MAX API GAMES (para importação)')
+                            ->description('Credenciais específicas para a API de importação de jogos')
+                            ->schema([
+                                TextInput::make('max_api_agent_code')
+                                    ->label('AGENT CODE (Importação)')
+                                    ->placeholder('Digite aqui o agent code para importação')
+                                    ->maxLength(191),
+                                TextInput::make('max_api_agent_token')
+                                    ->label('AGENT TOKEN (Importação)')
+                                    ->placeholder('Digite aqui o agent token para importação')
+                                    ->maxLength(191),
+                            ])->columns(2),
+
                         Section::make('CONFIGURAÇÃO DO AGENTE MAX API GAMES')
                             ->description('Configure o RTP, limites e bônus da MAX API Games. Os valores são salvos localmente nesta plataforma.')
                             ->schema([
@@ -345,6 +360,8 @@ class GamesKeyPage extends Page implements HasForms
                 'max_api_code' => $this->data['max_api_code'],
                 'max_api_token' => $this->data['max_api_token'],
                 'max_api_secret' => $this->data['max_api_secret'],
+                'max_api_agent_code' => $this->data['max_api_agent_code'],
+                'max_api_agent_token' => $this->data['max_api_agent_token'],
                 'active_api' => $this->data['active_api'],
                 // PlayFiver agent config
                 'pf_rtp' => $this->data['pf_rtp'] ?? null,

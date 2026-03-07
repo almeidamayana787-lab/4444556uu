@@ -38,6 +38,8 @@ class GamesKey extends Model
         'max_api_code',
         'max_api_token',
         'max_api_secret',
+        'max_api_agent_code',
+        'max_api_agent_token',
         'active_api',
         // MAX API agent config
         'max_rtp',
@@ -103,6 +105,26 @@ class GamesKey extends Model
      * Accessor for max_api_token.
      */
     protected function maxApiToken(): Attribute
+    {
+        return Attribute::make(
+            get: fn(?string $value) => env('APP_DEMO') ? '*********************' : $value,
+        );
+    }
+
+    /**
+     * Accessor for max_api_agent_code.
+     */
+    protected function maxApiAgentCode(): Attribute
+    {
+        return Attribute::make(
+            get: fn(?string $value) => env('APP_DEMO') ? '*********************' : $value,
+        );
+    }
+
+    /**
+     * Accessor for max_api_agent_token.
+     */
+    protected function maxApiAgentToken(): Attribute
     {
         return Attribute::make(
             get: fn(?string $value) => env('APP_DEMO') ? '*********************' : $value,

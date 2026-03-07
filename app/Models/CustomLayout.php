@@ -26,7 +26,6 @@ class CustomLayout extends Model
     protected $fillable = [
 
 
-
         'link_app',
         'link_telegram',
         'link_facebook',
@@ -36,6 +35,26 @@ class CustomLayout extends Model
         'link_siderbar_2',
         'link_siderbar_3',
         'link_lincenca',
+
+        // Cores Principais - Design Alvo
+        'cor_primaria',
+        'cor_secundaria', 
+        'cor_acento',
+        'cor_texto_claro',
+        'cor_texto_escuro',
+        'cor_fundo_claro',
+        'cor_fundo_escuro',
+        'cor_borda',
+        'cor_botao_primario',
+        'cor_botao_primario_hover',
+        'cor_botao_secundario',
+        'cor_botao_secundario_hover',
+        'cor_link',
+        'cor_link_hover',
+        'cor_sucesso',
+        'cor_erro',
+        'cor_alerta',
+        'cor_informacao',
 
         'navbar_imglogin',
         'menucell_inicio',

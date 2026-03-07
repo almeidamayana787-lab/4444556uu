@@ -105,6 +105,7 @@ class LayoutCssCustom extends Page implements HasForms
                 $this->getSectiimagensmanegem(),
                 $this->getSectilinkmagem(),
                 $this->getSectionCustomCode(),
+                $this->getSectionCoresPrincipais(),
                 
                 
             ])
@@ -225,6 +226,35 @@ class LayoutCssCustom extends Page implements HasForms
                 FileUpload::make('footer_instagram')->label("Imagem do Footer Instagram")->placeholder('Carregue uma imagem')->image(),
                 FileUpload::make('footer_mais18')->label("Imagem do Footer +18")->placeholder('Carregue uma imagem')->image(),
             ])->columns(4);
+    }
+
+    protected function getSectionCoresPrincipais(): Section
+    {
+        return Section::make('CORES PRINCIPAIS - DESIGN ALVO')
+            ->description('Configure as cores principais baseadas no design alvo para alcançar a identidade visual completa')
+            ->schema([
+                ColorPicker::make('cor_primaria')->label('Cor Primária (Principal)')->default('#1a1a2e'),
+                ColorPicker::make('cor_secundaria')->label('Cor Secundária')->default('#16213e'),
+                ColorPicker::make('cor_acento')->label('Cor de Destaque/Acento')->default('#e94560'),
+                ColorPicker::make('cor_texto_claro')->label('Cor do Texto Claro')->default('#f5f5f5'),
+                ColorPicker::make('cor_texto_escuro')->label('Cor do Texto Escuro')->default('#333333'),
+                ColorPicker::make('cor_fundo_claro')->label('Cor de Fundo Claro')->default('#ffffff'),
+                ColorPicker::make('cor_fundo_escuro')->label('Cor de Fundo Escuro')->default('#0f0f0f'),
+                ColorPicker::make('cor_borda')->label('Cor das Bordas')->default('#444444'),
+                ColorPicker::make('cor_botao_primario')->label('Cor do Botão Primário')->default('#e94560'),
+                ColorPicker::make('cor_botao_primario_hover')->label('Cor do Botão Primário (Hover)')->default('#d63750'),
+                ColorPicker::make('cor_botao_secundario')->label('Cor do Botão Secundário')->default('#1a1a2e'),
+                ColorPicker::make('cor_botao_secundario_hover')->label('Cor do Botão Secundário (Hover)')->default('#2a2a3e'),
+                ColorPicker::make('cor_link')->label('Cor dos Links')->default('#e94560'),
+                ColorPicker::make('cor_link_hover')->label('Cor dos Links (Hover)')->default('#d63750'),
+                ColorPicker::make('cor_sucesso')->label('Cor de Sucesso')->default('#28a745'),
+                ColorPicker::make('cor_erro')->label('Cor de Erro')->default('#dc3545'),
+                ColorPicker::make('cor_alerta')->label('Cor de Alerta')->default('#ffc107'),
+                ColorPicker::make('cor_informacao')->label('Cor de Informação')->default('#17a2b8'),
+            ])
+            ->columns(3)
+            ->collapsible()
+            ->collapsed();
     }
 
     protected function getSectionCustomCode(): Section

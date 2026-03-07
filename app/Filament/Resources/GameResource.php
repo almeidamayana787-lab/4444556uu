@@ -25,7 +25,7 @@ class GameResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'TODOS OS JOGOS';
+    protected static ?string $navigationLabel = 'JOGOS IMPORTADOS';
 
     protected static ?string $modelLabel = 'Todos os Jogos';
 
