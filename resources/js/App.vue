@@ -5,8 +5,12 @@ import NotificationTicker from './components/NotificationTicker.vue';
 import CategoryMenu from './components/CategoryMenu.vue';
 import GameGrid from './components/GameGrid.vue';
 import BottomNav from './components/BottomNav.vue';
+import OffersView from './components/OffersView.vue';
+import RegisterView from './components/RegisterView.vue';
 
 const isLoaded = ref(false);
+const currentView = ref('home'); // 'home', 'offers', 'register'
+const isLoggedIn = ref(false);
 
 onMounted(() => {
   // Simulate loading screen
@@ -14,33 +18,59 @@ onMounted(() => {
     isLoaded.value = true;
   }, 1000);
 });
+
+const handleNavigate = (view) => {
+  currentView.value = view;
+  window.scrollTo(0, 0);
+};
+
+const handleRegister = () => {
+  isLoggedIn.value = true;
+  currentView.value = 'home';
+};
 </script>
 
 <template>
   <div class="min-h-screen bg-[#111111] text-white font-sans w-full overflow-x-hidden relative">
     
-    <!-- Main content container -->
-    <div v-if="isLoaded" class="fade-in max-w-[480px] mx-auto bg-[#1a1a1a] min-h-screen relative shadow-2xl border-x border-yellow-900/10 pb-32">
-      <Header />
+    <!-- App Container -->
+    <div v-if="isLoaded" class="fade-in max-w-[480px] mx-auto bg-[#1a1a1a] min-h-screen relative shadow-2xl border-x border-yellow-900/10">
       
-      <!-- Banner -->
-      <div class="p-3 pt-0">
-        <img src="/banner/banner.avif" alt="Banner" class="w-full h-auto rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.4)] border border-yellow-900/10" />
+      <!-- Home View -->
+      <div v-if="currentView === 'home'" class="pb-32">
+        <Header />
+        
+        <!-- Banner -->
+        <div class="p-3 pt-0">
+          <img src="/banner/banner.avif" alt="Banner" class="w-full h-auto rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.4)] border border-yellow-900/10" />
+        </div>
+
+        <NotificationTicker />
+        
+        <!-- Category Menu -->
+        <CategoryMenu />
+
+        <!-- Games Grids -->
+        <GameGrid title="Popular" iconSrc="/casino_icons/popular.avif" sectionId="popular" />
+        <GameGrid title="Slots" iconSrc="/casino_icons/slots.avif" sectionId="slots" />
+        <GameGrid title="Retrô" iconSrc="/casino_icons/retro.png" sectionId="retro" />
       </div>
 
-      <NotificationTicker />
-      
-      <!-- Category Menu -->
-      <CategoryMenu />
+      <!-- Offers View -->
+      <OffersView v-else-if="currentView === 'offers'" @close="handleNavigate('home')" />
 
-      <!-- Games Grids -->
-      <GameGrid title="Popular" iconSrc="/casino_icons/popular.avif" sectionId="popular" />
-      <GameGrid title="Slots" iconSrc="/casino_icons/slots.avif" sectionId="slots" />
-      <GameGrid title="Retrô" iconSrc="/casino_icons/retro.png" sectionId="retro" />
+      <!-- Register View -->
+      <RegisterView v-else-if="currentView === 'register'" @close="handleNavigate('home')" @registered="handleRegister" />
+
     </div>
 
-    <!-- Bottom Navigation - Placed top-level with high z-index -->
-    <BottomNav v-if="isLoaded" />
+    <!-- Bottom Navigation - Placed top-level -->
+    <BottomNav 
+      v-if="isLoaded" 
+      :currentView="currentView" 
+      :isLoggedIn="isLoggedIn"
+      @navigate="handleNavigate" 
+    />
 
     <!-- Loading Screen -->
     <div v-else class="fixed inset-0 z-[200] flex items-center justify-center bg-[#1a1a1a] loading-fade">
@@ -53,7 +83,7 @@ onMounted(() => {
 </template>
 
 <style>
-/* Global CSS additions */
+/* Global CSS */
 :root {
   --primary-color: #fca000;
   --bg-color: #111111;
@@ -83,16 +113,5 @@ body::-webkit-scrollbar {
 
 .loading-fade {
   transition: opacity 0.5s ease;
-}
-
-/* Matte Black & Gold common utilities */
-.matte-black {
-  background-color: #1a1a1a;
-}
-.gold-text {
-  color: #fca000;
-}
-.gold-border {
-  border-color: rgba(252, 160, 0, 0.2);
 }
 </style>
