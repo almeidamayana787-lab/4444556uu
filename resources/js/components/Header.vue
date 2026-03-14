@@ -1,8 +1,8 @@
 <template>
   <header class="flex items-center justify-between px-4 py-3 bg-[#111111] sticky top-0 z-40 shadow-sm border-b border-gray-800">
     <!-- Logo area -->
-    <div class="flex items-center space-x-2">
-      <img src="/image-removebg-preview.png" alt="Logo" class="w-20 h-auto" />
+    <div class="flex items-center space-x-2 relative z-50">
+      <img src="/image-removebg-preview.png" alt="Logo" class="w-24 h-auto" />
     </div>
 
     <!-- Auth Buttons -->

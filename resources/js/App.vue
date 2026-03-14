@@ -40,10 +40,15 @@ const handleRegisterSuccess = (user) => {
   <div class="min-h-screen bg-[#111111] text-white font-sans w-full overflow-x-hidden relative">
     
     <!-- App Container -->
-    <div v-if="isLoaded" class="fade-in max-w-[528px] mx-auto bg-[#1a1a1a] min-h-screen relative shadow-2xl border-x border-yellow-900/10">
+    <div v-if="isLoaded" class="fade-in max-w-[528px] mx-auto bg-[#111111] min-h-screen relative shadow-2xl border-x border-yellow-900/10">
       
-      <!-- Home View -->
-      <div v-if="currentView === 'home'" class="pb-32">
+      <!-- Faded Dragon Background -->
+      <div class="absolute inset-0 z-0 bg-cover bg-top bg-no-repeat bg-fixed pointer-events-none opacity-40 mix-blend-luminosity" style="background-image: url('/founde/drag.jpg');"></div>
+
+      <!-- Content wrapper -->
+      <div class="relative z-10">
+        <!-- Home View -->
+        <div v-if="currentView === 'home'" class="pb-32">
         <Header />
         
         <!-- Banner -->
@@ -74,6 +79,7 @@ const handleRegisterSuccess = (user) => {
       <!-- Profile View -->
       <ProfileView v-else-if="currentView === 'profile'" :user="userProfile" @close="currentView = 'home'" @request-register="currentView = 'register'" />
 
+      </div> <!-- End Content wrapper -->
     </div>
 
     <!-- Bottom Navigation - Placed top-level -->
