@@ -1,69 +1,62 @@
 <template>
-  <div class="flex items-center justify-between bg-[#1f1f1f] px-3 py-2 my-2 rounded-lg mx-3 shadow-md border border-gray-800 text-sm overflow-hidden relative">
+  <div class="flex items-center justify-between bg-[#111] px-3 py-1.5 my-2 rounded-full mx-3 shadow-inner border border-yellow-900/30 text-xs overflow-hidden h-9">
     
-    <!-- Left Icon -->
-    <img src="/casino_icons/sound_icon.avif" alt="Sound" class="w-5 h-5 z-10 bg-[#1f1f1f]" />
+    <!-- Left Icon (Speaker) -->
+    <div class="z-10 bg-[#111] pr-2 flex items-center shrink-0">
+      <img src="/casino_icons/sound_icon.avif" alt="Sound" class="w-4 h-4 object-contain" />
+    </div>
 
-    <!-- Ticker container -->
-    <div class="flex-1 overflow-hidden relative h-5 mx-2 flex items-center">
-      <div 
-        class="whitespace-nowrap flex items-center transition-transform duration-500 ease-in-out absolute left-0 text-gray-300 w-full"
-        :style="{ transform: `translateY(${offset}px)`, opacity: opacity }"
-      >
-        <span class="mr-1 text-[#fca000] font-semibold">{{ currentMessage.user }}</span> 
-        ganhou 
-        <span class="ml-1 text-[#00e676] font-bold">{{ currentMessage.value }} R$</span>
-        <img src="https://artpoin.com/wp-content/uploads/2023/09/artpoin-logo-pix.png" alt="Pix" class="w-4 h-4 ml-1 inline-block" />
+    <!-- Ticker container (Marquee style) -->
+    <div class="flex-1 overflow-hidden relative h-full flex items-center">
+      <div class="marquee-content flex items-center space-x-8">
+        <div v-for="(msg, index) in messages" :key="index" class="flex items-center shrink-0">
+          <span class="text-[#fca000] font-bold mr-1">{{ msg.user }}</span>
+          <span class="text-gray-400">ganhou</span>
+          <span class="ml-1 text-[#00e676] font-bold">{{ msg.value }} R$</span>
+          <img src="https://artpoin.com/wp-content/uploads/2023/09/artpoin-logo-pix.png" alt="Pix" class="w-3.5 h-3.5 ml-1 inline-block object-contain" />
+        </div>
+        <!-- Duplicate for seamless loop -->
+        <div v-for="(msg, index) in messages" :key="'dup-'+index" class="flex items-center shrink-0">
+          <span class="text-[#fca000] font-bold mr-1">{{ msg.user }}</span>
+          <span class="text-gray-400">ganhou</span>
+          <span class="ml-1 text-[#00e676] font-bold">{{ msg.value }} R$</span>
+          <img src="https://artpoin.com/wp-content/uploads/2023/09/artpoin-logo-pix.png" alt="Pix" class="w-3.5 h-3.5 ml-1 inline-block object-contain" />
+        </div>
       </div>
     </div>
 
-    <!-- Right Icon -->
-    <img src="/casino_icons/sound_icon.avif" alt="Message Box" class="w-5 h-5 z-10 bg-[#1f1f1f]" />
+    <!-- Right Icon (Message Box) -->
+    <div class="z-10 bg-[#111] pl-2 flex items-center shrink-0">
+      <img src="/casino_icons/mensagem_caixa.avif" alt="Message Box" class="w-4 h-4 object-contain" />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref } from 'vue';
 
 const messages = [
-  { user: 'João***', value: '100.00' },
-  { user: 'Maria***', value: '50.00' },
-  { user: 'Carlos***', value: '250.00' },
-  { user: 'Pedro***', value: '500.00' },
-  { user: 'Ana***', value: '1,000.00' },
+  { user: 'user_482***', value: '100.00' },
+  { user: 'user_912***', value: '50.00' },
+  { user: 'user_034***', value: '250.00' },
+  { user: 'user_777***', value: '500.00' },
+  { user: 'user_159***', value: '1,000.00' },
 ];
-
-const currentIndex = ref(0);
-const currentMessage = ref(messages[0]);
-const offset = ref(0);
-const opacity = ref(1);
-let interval = null;
-
-const nextMessage = () => {
-  opacity.value = 0;
-  offset.value = -10;
-  
-  setTimeout(() => {
-    currentIndex.value = (currentIndex.value + 1) % messages.length;
-    currentMessage.value = messages[currentIndex.value];
-    offset.value = 10;
-    
-    setTimeout(() => {
-      opacity.value = 1;
-      offset.value = 0;
-    }, 50);
-  }, 300);
-};
-
-onMounted(() => {
-  interval = setInterval(nextMessage, 4000);
-});
-
-onUnmounted(() => {
-  clearInterval(interval);
-});
 </script>
 
 <style scoped>
-/* Smooth transition is handled inline with Vue data binding. */
+.marquee-content {
+  display: flex;
+  width: max-content;
+  animation: marquee 20s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.shrink-0 {
+  flex-shrink: 0;
+}
 </style>

@@ -4,6 +4,7 @@ import Header from './components/Header.vue';
 import NotificationTicker from './components/NotificationTicker.vue';
 import CategoryMenu from './components/CategoryMenu.vue';
 import GameGrid from './components/GameGrid.vue';
+import BottomNav from './components/BottomNav.vue';
 
 const isLoaded = ref(false);
 
@@ -19,12 +20,12 @@ onMounted(() => {
   <div class="min-h-screen bg-[#111111] text-white font-sans w-full overflow-x-hidden">
     
     <!-- Main content container -->
-    <div v-if="isLoaded" class="fade-in max-w-[480px] mx-auto bg-[#1a1a1a] min-h-screen relative shadow-2xl border-x border-gray-900 pb-20">
+    <div v-if="isLoaded" class="fade-in max-w-[480px] mx-auto bg-[#1a1a1a] min-h-screen relative shadow-2xl border-x border-yellow-900/10 pb-24">
       <Header />
       
       <!-- Banner -->
       <div class="p-3 pt-0">
-        <img src="/banner/banner.avif" alt="Banner" class="w-full h-auto rounded-lg shadow-lg" />
+        <img src="/banner/banner.avif" alt="Banner" class="w-full h-auto rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.4)] border border-yellow-900/10" />
       </div>
 
       <NotificationTicker />
@@ -37,6 +38,8 @@ onMounted(() => {
       <GameGrid title="Slots" iconSrc="/casino_icons/slots.avif" sectionId="slots" />
       <GameGrid title="Retrô" iconSrc="/casino_icons/retro.png" sectionId="retro" />
 
+      <!-- Bottom Navigation -->
+      <BottomNav />
     </div>
 
     <!-- Loading Screen -->
@@ -60,10 +63,15 @@ onMounted(() => {
 body {
   background-color: var(--bg-color);
   color: #fff;
+  scrollbar-width: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
 }
 
 .fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
 @keyframes fadeIn {
@@ -73,5 +81,16 @@ body {
 
 .loading-fade {
   transition: opacity 0.5s ease;
+}
+
+/* Matte Black & Gold common utilities */
+.matte-black {
+  background-color: #1a1a1a;
+}
+.gold-text {
+  color: #fca000;
+}
+.gold-border {
+  border-color: rgba(252, 160, 0, 0.2);
 }
 </style>

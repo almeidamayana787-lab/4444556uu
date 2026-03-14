@@ -1,7 +1,7 @@
 <template>
   <div :id="sectionId" class="px-3 mt-6">
     <div class="flex items-center space-x-2 mb-3">
-      <img :src="iconSrc" :alt="title" class="w-6 h-6" />
+      <img :src="iconSrc" :alt="title" class="w-6 h-6 object-contain" />
       <h2 class="text-lg font-bold text-gray-100">{{ title }}</h2>
     </div>
     
