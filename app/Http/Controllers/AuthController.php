@@ -61,7 +61,7 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login successful',
             'user' => $user
-        ]);
+        ]);;
     }
 
     public function me(Request $request)
