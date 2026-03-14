@@ -48,8 +48,8 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        $user = User::where('name', $request->login)
-            ->orWhere('phone', $request->login)
+        $user = User::where('name', trim($request->login))
+            ->orWhere('phone', trim($request->login))
             ->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
