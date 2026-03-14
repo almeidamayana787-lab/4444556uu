@@ -41,8 +41,13 @@
             <!-- Social Icons -->
             <div class="flex justify-between items-center pt-1 px-1">
               <div v-for="(social, i) in socials" :key="i" class="flex flex-col items-center space-y-1">
-                <div :class="social.bg" class="w-10 h-10 rounded-full flex items-center justify-center shadow-md">
-                   <img :src="social.icon" class="w-6 h-6 object-contain" />
+                <div class="w-10 h-10 rounded-full flex items-center justify-center shadow-md overflow-hidden" :class="social.bg">
+                   <!-- SVG for Partilhar -->
+                   <svg v-if="social.name === 'Partilhar'" viewBox="0 0 40 40" class="w-6 h-6 fill-white">
+                      <path d="M39.084,11.043a9.472,9.472,0,0,1-.628.812q-4.419,4.614-8.851,9.219a1.176,1.176,0,0,1-1.126.451,1.1,1.1,0,0,1-.868-1.194c0-1.368,0-2.738,0-4.107v-.347c-.042-.031-.059-.054-.078-.055a12.329,12.329,0,0,0-9.671,3.139,12.019,12.019,0,0,0-2.493,3.316,1.08,1.08,0,0,1-1.481.576.968.968,0,0,1-.6-.867,18.273,18.273,0,0,1,.6-6.3A13.785,13.785,0,0,1,24.744,6a22.662,22.662,0,0,1,2.5-.254c.109-.011.219-.012.364-.02V5.343c0-1.3.019-2.6-.008-3.9A1.36,1.36,0,0,1,28.4,0h.537A6.223,6.223,0,0,1,29.7.582q4.389,4.546,8.759,9.112a9.284,9.284,0,0,1,.627.811ZM40,33.7V19.919a1.852,1.852,0,0,0-3.7,0V33.7A2.6,2.6,0,0,1,33.7,36.3H6.3A2.6,2.6,0,0,1,3.7,33.7V12.6A2.6,2.6,0,0,1,6.3,10.011h5.469a1.852,1.852,0,0,0,0-3.7H6.3A6.3,6.3,0,0,0,0,12.6V33.7A6.3,6.3,0,0,0,6.3,40H33.7A6.3,6.3,0,0,0,40,33.7Z" />
+                   </svg>
+                   <!-- Image for others -->
+                   <img v-else :src="social.icon" class="w-full h-full object-cover" />
                 </div>
                 <span class="text-[9px] text-gray-500">{{ social.name }}</span>
               </div>
@@ -76,11 +81,16 @@
       <!-- Tiers Grid -->
       <div class="grid grid-cols-4 gap-2">
         <div v-for="tier in tiers" :key="tier.people" class="bg-[#222] rounded-lg p-2 flex flex-col items-center border border-gray-800/50">
-          <div class="w-full aspect-[4/3] bg-gradient-to-br from-gray-700 to-gray-800 rounded flex items-center justify-center relative mb-1 overflow-hidden group">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white/20 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          <div class="w-full aspect-[4/3] bg-gradient-to-br from-[#2a2a2a] to-[#121212] rounded flex items-center justify-center relative mb-1 overflow-hidden group">
+            <!-- Chest SVG Premium Gold -->
+            <svg viewBox="0 0 24 24" class="w-10 h-10 drop-shadow-[0_2px_5px_rgba(252,160,0,0.4)]" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 10C4 8.89543 4.89543 8 6 8H18C19.1046 8 20 8.89543 20 10V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V10Z" fill="#fca000" fill-opacity="0.2" stroke="#fca000" stroke-width="1.5"/>
+              <path d="M12 11V14M12 14C11.4477 14 11 13.5523 11 13C11 12.4477 11.4477 12 12 12C12.5523 12 13 12.4477 13 13C13 13.5523 12.5523 14 12 14Z" stroke="#fca000" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M4 10L12 8L20 10" stroke="#fca000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18 8V6C18 5.44772 17.5523 5 17 5H7C6.44772 5 6 5.44772 6 6V8" stroke="#fca000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="9" y="11" width="6" height="3" rx="1.5" fill="#fca000" fill-opacity="0.3"/>
             </svg>
-            <div class="absolute bottom-1 text-[7px] text-gray-400 uppercase font-black tracking-tighter">{{ tier.people }} Pessoas</div>
+            <div class="absolute bottom-1 text-[7px] text-[#fca000]/60 uppercase font-black tracking-tighter">{{ tier.people }} Pessoas</div>
           </div>
           <span class="text-[10px] font-bold text-gray-400">{{ tier.reward }},00</span>
         </div>
@@ -107,11 +117,11 @@
 defineEmits(['close']);
 
 const socials = [
-  { name: 'Partilhar', bg: 'bg-orange-500', icon: 'https://cdn-icons-png.flaticon.com/512/1358/1358023.png' },
-  { name: 'Facebook', bg: 'bg-blue-600', icon: 'https://cdn-icons-png.flaticon.com/512/733/733547.png' },
-  { name: 'WhatsApp', bg: 'bg-green-500', icon: 'https://cdn-icons-png.flaticon.com/512/733/733585.png' },
-  { name: 'Telegram', bg: 'bg-blue-400', icon: 'https://cdn-icons-png.flaticon.com/512/2111/2111646.png' },
-  { name: 'Insta', bg: 'bg-pink-600', icon: 'https://cdn-icons-png.flaticon.com/512/174/174855.png' },
+  { name: 'Partilhar', bg: 'bg-[#ff9800]', icon: '' },
+  { name: 'Facebook', bg: 'bg-transparent', icon: '/casino_icons/img_facebook.png' },
+  { name: 'WhatsApp', bg: 'bg-transparent', icon: '/casino_icons/img_wa.png' },
+  { name: 'Telegram', bg: 'bg-transparent', icon: '/casino_icons/img_tg.png' },
+  { name: 'Insta', bg: 'bg-transparent', icon: '/casino_icons/instamg.avif' },
 ];
 
 const tiers = [
