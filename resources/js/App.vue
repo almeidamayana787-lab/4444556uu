@@ -33,9 +33,9 @@ onMounted(() => {
       <CategoryMenu />
 
       <!-- Games Grids -->
-      <GameGrid title="Popular" iconSrc="/icons/popular.avif" sectionId="popular" />
-      <GameGrid title="Slots" iconSrc="/icons/slots.avif" sectionId="slots" />
-      <GameGrid title="Retrô" iconSrc="/icons/retro.png" sectionId="retro" />
+      <GameGrid title="Popular" iconSrc="/casino_icons/popular.avif" sectionId="popular" />
+      <GameGrid title="Slots" iconSrc="/casino_icons/slots.avif" sectionId="slots" />
+      <GameGrid title="Retrô" iconSrc="/casino_icons/retro.png" sectionId="retro" />
 
     </div>
 

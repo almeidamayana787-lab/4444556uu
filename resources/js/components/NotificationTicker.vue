@@ -2,7 +2,7 @@
   <div class="flex items-center justify-between bg-[#1f1f1f] px-3 py-2 my-2 rounded-lg mx-3 shadow-md border border-gray-800 text-sm overflow-hidden relative">
     
     <!-- Left Icon -->
-    <img src="/icons/sound_icon.avif" alt="Sound" class="w-5 h-5 z-10 bg-[#1f1f1f]" />
+    <img src="/casino_icons/sound_icon.avif" alt="Sound" class="w-5 h-5 z-10 bg-[#1f1f1f]" />
 
     <!-- Ticker container -->
     <div class="flex-1 overflow-hidden relative h-5 mx-2 flex items-center">
@@ -18,7 +18,7 @@
     </div>
 
     <!-- Right Icon -->
-    <img src="/icons/sound_icon.avif" alt="Message Box" class="w-5 h-5 z-10 bg-[#1f1f1f]" />
+    <img src="/casino_icons/sound_icon.avif" alt="Message Box" class="w-5 h-5 z-10 bg-[#1f1f1f]" />
   </div>
 </template>
 
