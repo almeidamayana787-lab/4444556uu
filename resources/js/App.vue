@@ -43,7 +43,10 @@ const handleRegisterSuccess = (user) => {
     <div v-if="isLoaded" class="fade-in max-w-[528px] mx-auto bg-[#111111] min-h-screen relative shadow-2xl border-x border-yellow-900/10">
       
       <!-- Faded Dragon Background -->
-      <div class="absolute inset-0 z-0 bg-cover bg-top bg-no-repeat bg-fixed pointer-events-none opacity-40 mix-blend-luminosity" style="background-image: url('/founde/drag.jpg');"></div>
+      <div class="absolute inset-x-0 top-0 h-[600px] z-0 bg-cover bg-top bg-no-repeat pointer-events-none opacity-50" style="background-image: url('/founde/drag.jpg');">
+        <!-- Fade out at the bottom -->
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#111111]/80 to-[#111111]"></div>
+      </div>
 
       <!-- Content wrapper -->
       <div class="relative z-10">
