@@ -18,6 +18,7 @@ class GameApiController extends Controller
         return [
             'agent_code' => GlobalSetting::where('key', 'api_agent_code')->value('value') ?? '',
             'agent_token' => GlobalSetting::where('key', 'api_agent_token')->value('value') ?? '',
+            'agent_secret' => GlobalSetting::where('key', 'api_webhook_secret')->value('value') ?? '',
         ];
     }
 
@@ -26,10 +27,12 @@ class GameApiController extends Controller
     {
         $agentCode = $request->agent_code;
         $agentToken = $request->agent_token;
+        $webhookSecret = $request->webhook_secret;
 
         // Save credentials
         GlobalSetting::updateOrCreate(['key' => 'api_agent_code'], ['value' => $agentCode]);
         GlobalSetting::updateOrCreate(['key' => 'api_agent_token'], ['value' => $agentToken]);
+        GlobalSetting::updateOrCreate(['key' => 'api_webhook_secret'], ['value' => $webhookSecret]);
 
         try {
             $response = Http::post($this->apiUrl, [
@@ -43,7 +46,7 @@ class GameApiController extends Controller
             if (isset($data['status']) && $data['status'] == 1) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Conexão bem-sucedida!',
+                    'message' => 'Conexão bem-sucedida! Webhook Secret salvo.',
                     'agent' => $data['agent'] ?? null
                 ]);
             }

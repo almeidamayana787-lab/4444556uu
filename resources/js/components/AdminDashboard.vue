@@ -122,14 +122,18 @@
           </div>
 
           <!-- Credentials -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label class="block text-sm text-gray-300 font-medium mb-1">Agent Code</label>
+              <label class="block text-sm text-gray-300 font-medium mb-1">Agent User</label>
               <input v-model="apiAgentCode" type="text" class="w-full bg-[#121212] border border-gray-700 rounded-lg h-12 px-4 focus:border-purple-500 outline-none text-sm" placeholder="ag_main_001" />
             </div>
             <div>
-              <label class="block text-sm text-gray-300 font-medium mb-1">Agent Token</label>
-              <input v-model="apiAgentToken" type="password" class="w-full bg-[#121212] border border-gray-700 rounded-lg h-12 px-4 focus:border-purple-500 outline-none text-sm" placeholder="tok_8f3a2b..." />
+              <label class="block text-sm text-gray-300 font-medium mb-1">API Token</label>
+              <input v-model="apiAgentToken" type="password" class="w-full bg-[#121212] border border-gray-700 rounded-lg h-12 px-4 focus:border-purple-500 outline-none text-sm" placeholder="tok_8f..." />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-300 font-medium mb-1">Webhook Secret</label>
+              <input v-model="apiWebhookSecret" type="password" class="w-full bg-[#121212] border border-gray-700 rounded-lg h-12 px-4 focus:border-purple-500 outline-none text-sm" placeholder="sec_..." />
             </div>
           </div>
 
@@ -261,6 +265,7 @@ const settings = ref({
 // API de Jogos
 const apiAgentCode = ref('');
 const apiAgentToken = ref('');
+const apiWebhookSecret = ref('');
 const apiLoading = ref(false);
 const fetchingGames = ref(false);
 const apiMessage = ref('');
@@ -302,6 +307,7 @@ const fetchSettings = async () => {
       settings.value = { ...settings.value, ...data };
       if (data.api_agent_code) apiAgentCode.value = data.api_agent_code;
       if (data.api_agent_token) apiAgentToken.value = data.api_agent_token;
+      if (data.api_webhook_secret) apiWebhookSecret.value = data.api_webhook_secret;
     }
   } catch (err) { console.error(err); }
   
@@ -353,7 +359,7 @@ const saveSettings = async () => {
 const testApiConnection = async () => {
   apiLoading.value = true; apiMessage.value = '';
   try {
-    const res = await fetch('/api/admin/test-api', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ agent_code: apiAgentCode.value, agent_token: apiAgentToken.value }) });
+    const res = await fetch('/api/admin/test-api', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ agent_code: apiAgentCode.value, agent_token: apiAgentToken.value, webhook_secret: apiWebhookSecret.value }) });
     const data = await res.json();
     apiSuccess.value = data.success;
     apiMessage.value = data.message + (data.agent ? ` | Saldo: R$ ${data.agent.balance}` : '');
