@@ -106,22 +106,56 @@
         </p>
       </div>
 
-      <!-- Submit Button wraps the regalo icon -->
-      <div class="relative pt-4">
-        <button @click="$emit('registered')" class="w-full bg-[#fca000] text-black font-bold h-12 rounded-lg flex items-center justify-center shadow-lg active:scale-95 transition-transform">
-          Registro
+      <!-- Auth Button With Gift Icon -->
+      <div class="relative w-full mt-6">
+        <button @click="handleRegister" :disabled="isLoading" class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold py-3 rounded-xl shadow-lg hover:brightness-110 transition flex justify-center items-center">
+          <span v-if="isLoading">Registrando...</span>
+          <span v-else>{{ isLoginMode ? 'Login' : 'Registro' }}</span>
         </button>
-        <div class="absolute -top-1 -right-2">
-           <div class="relative">
-             <img src="/casino_icons/presente.avif" alt="Gift" class="w-10 h-10 object-contain drop-shadow-xl" />
-             <span class="absolute -top-1 -right-1 bg-green-600 text-[8px] text-white px-1.5 py-0.5 rounded-full font-black animate-pulse">2-9</span>
-           </div>
-        </div>
+        <img v-if="!isLoginMode" src="/casino_icons/presente.avif" alt="Gift" class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-10 animate-bounce pointer-events-none drop-shadow-lg" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-defineEmits(['close', 'registered']);
+import { ref } from 'vue';
+const emit = defineEmits(['close', 'register-success']);
+
+const isLoginMode = ref(false);
+const showPassword = ref(false);
+const formPhone = ref('');
+const formPassword = ref('');
+const isLoading = ref(false);
+
+const handleRegister = async () => {
+  if (isLoginMode.value) return; // Mock login logic for now
+  if (!formPhone.value || !formPassword.value) return;
+  
+  isLoading.value = true;
+  try {
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        phone: formPhone.value,
+        password: formPassword.value
+      })
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      emit('register-success', data.user);
+    } else {
+      console.error("Error registering", await res.text());
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    isLoading.value = false;
+  }
+};
 </script>

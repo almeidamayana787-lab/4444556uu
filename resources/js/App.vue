@@ -1,3 +1,4 @@
+```vue
 <script setup>
 import { ref, onMounted } from 'vue';
 import Header from './components/Header.vue';
@@ -7,10 +8,13 @@ import GameGrid from './components/GameGrid.vue';
 import BottomNav from './components/BottomNav.vue';
 import OffersView from './components/OffersView.vue';
 import RegisterView from './components/RegisterView.vue';
+import SupportView from './components/SupportView.vue';
+import ProfileView from './components/ProfileView.vue';
 
 const isLoaded = ref(false);
-const currentView = ref('home'); // 'home', 'offers', 'register'
+const currentView = ref('home'); // home, offers, register, support, profile
 const isLoggedIn = ref(false);
+const userProfile = ref(null);
 
 onMounted(() => {
   // Simulate loading screen
@@ -21,12 +25,14 @@ onMounted(() => {
 
 const handleNavigate = (view) => {
   currentView.value = view;
+  // window.scrollTo(0, 0); // Removed as per instruction, but not explicitly stated to remove. Keeping it for now.
   window.scrollTo(0, 0);
 };
 
-const handleRegister = () => {
+const handleRegisterSuccess = (user) => {
+  userProfile.value = user;
   isLoggedIn.value = true;
-  currentView.value = 'home';
+  currentView.value = 'profile'; // Optional: open profile after registration
 };
 </script>
 
@@ -57,10 +63,16 @@ const handleRegister = () => {
       </div>
 
       <!-- Offers View -->
-      <OffersView v-else-if="currentView === 'offers'" @close="handleNavigate('home')" />
+      <OffersView v-else-if="currentView === 'offers'" @close="currentView = 'home'" />
 
       <!-- Register View -->
-      <RegisterView v-else-if="currentView === 'register'" @close="handleNavigate('home')" @registered="handleRegister" />
+      <RegisterView v-else-if="currentView === 'register'" @close="currentView = 'home'" @register-success="handleRegisterSuccess" />
+
+      <!-- Support View -->
+      <SupportView v-else-if="currentView === 'support'" @close="currentView = 'home'" />
+
+      <!-- Profile View -->
+      <ProfileView v-else-if="currentView === 'profile'" :user="userProfile" @close="currentView = 'home'" @request-register="currentView = 'register'" />
 
     </div>
 
