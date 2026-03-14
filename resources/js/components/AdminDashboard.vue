@@ -348,7 +348,13 @@ const removeTier = (i) => settings.value.invite_bonus_tiers.splice(i, 1);
 const saveSettings = async () => {
   isSaving.value = true;
   try {
-    const res = await fetch('/api/admin/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(settings.value) });
+    const dataToSave = {
+      ...settings.value,
+      api_agent_code: apiAgentCode.value,
+      api_agent_token: apiAgentToken.value,
+      api_webhook_secret: apiWebhookSecret.value
+    };
+    const res = await fetch('/api/admin/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(dataToSave) });
     if (res.ok) alert("Configurações atualizadas com sucesso!");
     else alert("Erro ao salvar.");
   } catch(e) { console.error(e); }
