@@ -89,7 +89,7 @@ const openProviderPage = (providerCode) => {
     <ProviderPage v-else-if="currentView === 'provider'" :providerCode="selectedProviderCode" @close="currentView = 'home'" />
 
     <!-- App Container -->
-    <div v-else-if="isLoaded" class="fade-in max-w-[528px] mx-auto bg-[#111111] min-h-screen relative shadow-2xl border-x border-yellow-900/10">
+    <div v-else-if="isLoaded" class="fade-in max-w-[440px] mx-auto bg-[#111111] min-h-screen relative shadow-2xl border-x border-yellow-900/10">
 
       <!-- Background -->
       <div class="absolute inset-0 z-0 bg-cover bg-top bg-no-repeat pointer-events-none" :style="{ backgroundImage: `url('${globalSettings.home_background}')` }"></div>

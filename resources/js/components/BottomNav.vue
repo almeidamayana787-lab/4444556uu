@@ -2,7 +2,7 @@
   <!-- Fixed container that always spans viewport width -->
   <nav class="fixed bottom-0 left-0 right-0 z-[100] flex justify-center translate-y-[1px]">
     <!-- Centered bar that mimics the App.vue max-width -->
-    <div class="w-full max-w-[528px] bg-[#0d0d0d] border-t border-[#fca000]/20 flex items-center justify-around h-20 px-2 shadow-[0_-8px_20px_rgba(0,0,0,0.8)] pointer-events-auto rounded-t-xl mb-0">
+    <div class="w-full max-w-[440px] bg-[#0d0d0d] border-t border-[#fca000]/20 flex items-center justify-around h-20 px-2 shadow-[0_-8px_20px_rgba(0,0,0,0.8)] pointer-events-auto rounded-t-xl mb-0">
       
       <!-- Começar -->
       <button 
