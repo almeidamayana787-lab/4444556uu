@@ -75,7 +75,7 @@ const handleRegister = () => {
     <!-- Loading Screen -->
     <div v-else class="fixed inset-0 z-[200] flex items-center justify-center bg-[#1a1a1a] loading-fade">
       <div class="flex flex-col items-center">
-        <img src="/image-removebg-preview.png" alt="Logo" class="w-60 animate-pulse drop-shadow-[0_0_15px_rgba(252,160,0,0.5)] mb-4" />
+        <img src="/image-removebg-preview.png" alt="Logo" class="w-72 animate-pulse drop-shadow-[0_0_15px_rgba(252,160,0,0.5)] mb-4" />
         <div class="w-12 h-12 border-4 border-[#fca000] border-t-transparent rounded-full animate-spin"></div>
       </div>
     </div>
