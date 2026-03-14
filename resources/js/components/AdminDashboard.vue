@@ -159,7 +159,7 @@
           <div v-if="apiProviders.length > 0" class="space-y-4 mt-6">
             <h4 class="text-lg font-bold text-gray-200">Provedores e Jogos Importados ({{ totalGamesCount }})</h4>
             
-            <div v-for="provider in apiProviders" :key="provider.code" class="bg-[#111111] rounded-xl border border-gray-800 overflow-hidden">
+            <div v-for="provider in apiProviders" :key="provider.code" class="bg-[#111111] rounded-xl border border-gray-800">
               <!-- Provider Header -->
               <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-[#1a1a1a] transition" @click="toggleProvider(provider.code)">
                 <div class="flex items-center gap-3">
@@ -185,7 +185,7 @@
               <!-- Provider Games List -->
               <div v-if="expandedProviders.includes(provider.code)" class="border-t border-gray-800">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2 p-4">
-                  <div v-for="game in provider.games" :key="game.id" class="relative group bg-[#1a1a1a] rounded-lg overflow-hidden border border-gray-800 hover:border-purple-500 transition">
+                  <div v-for="game in provider.games" :key="game.id" class="relative group bg-[#1a1a1a] rounded-lg border border-gray-800 hover:border-purple-500 transition">
                     <img v-if="game.banner_local" :src="game.banner_local" class="w-full aspect-[3/4] object-cover" />
                     <div v-else class="w-full aspect-[3/4] bg-[#222] flex items-center justify-center text-xs text-gray-600">Sem capa</div>
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
