@@ -15,11 +15,30 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call(AdminUserSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Seed default global settings
+        $defaults = [
+            'home_background' => '/founde/eu7.png',
+            'home_banners' => json_encode(['/banner/banner.avif']),
+            'category_icon_popular' => '/casino_icons/popular.avif',
+            'category_icon_slot' => '/casino_icons/slots.avif',
+            'category_icon_retro' => '/casino_icons/retro.png',
+            'support_telegram' => 'https://t.me/suporte',
+            'support_whatsapp' => 'https://wa.me/5500000000000',
+            'support_facebook' => 'https://facebook.com',
+            'support_instagram' => 'https://instagram.com',
+            'invite_bonus_tiers' => json_encode([
+                ['people' => 1, 'bets' => 300, 'reward' => 50],
+                ['people' => 20, 'bets' => 300, 'reward' => 500]
+            ]),
+        ];
+
+        foreach ($defaults as $key => $value) {
+            \App\Models\GlobalSetting::updateOrCreate(
+                ['key' => $key],
+                ['value' => $value]
+            );
+        }
     }
 }

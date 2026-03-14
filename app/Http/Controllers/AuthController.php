@@ -41,6 +41,29 @@ class AuthController extends Controller
         ], 201);
     }
 
+    public function login(Request $request)
+    {
+        $request->validate([
+            'login' => 'required', // Can be name or phone
+            'password' => 'required'
+        ]);
+
+        $user = User::where('name', $request->login)
+            ->orWhere('phone', $request->login)
+            ->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Credenciais inválidas'], 401);
+        }
+
+        Auth::login($user);
+
+        return response()->json([
+            'message' => 'Login successful',
+            'user' => $user
+        ]);
+    }
+
     public function me(Request $request)
     {
         if (Auth::check()) {
