@@ -34,7 +34,7 @@ const handleRegister = () => {
   <div class="min-h-screen bg-[#111111] text-white font-sans w-full overflow-x-hidden relative">
     
     <!-- App Container -->
-    <div v-if="isLoaded" class="fade-in max-w-[480px] mx-auto bg-[#1a1a1a] min-h-screen relative shadow-2xl border-x border-yellow-900/10">
+    <div v-if="isLoaded" class="fade-in max-w-[528px] mx-auto bg-[#1a1a1a] min-h-screen relative shadow-2xl border-x border-yellow-900/10">
       
       <!-- Home View -->
       <div v-if="currentView === 'home'" class="pb-32">
