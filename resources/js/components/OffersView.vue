@@ -14,28 +14,33 @@
     <div class="p-4 space-y-4">
       <!-- Invite Card -->
       <div class="bg-[#121212] rounded-xl p-4 border border-yellow-900/10 shadow-lg relative overflow-hidden">
-        <div class="flex items-start space-x-4">
-          <div class="flex flex-col items-center">
-            <div class="bg-white p-2 rounded-lg mb-2">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://398.win.mooo.com" alt="QR Code" class="w-20 h-20" />
-            </div>
-            <button class="bg-[#fca000] text-black text-[10px] font-bold py-1 px-3 rounded-full shadow-lg">Salvar código de..</button>
-          </div>
-          <div class="flex-1 space-y-3">
-            <div class="text-xs text-gray-500 mb-1">Link de convite</div>
-            <div class="flex items-center bg-[#1a1a1a] rounded-lg border border-gray-800 p-2 relative h-10 px-3">
-              <span class="text-xs text-gray-400 truncate flex-1">https://398.win.mooo.com</span>
-            </div>
-            <div class="flex justify-between items-center pt-1 px-1">
-              <div v-for="(social, i) in socials" :key="i" class="flex flex-col items-center space-y-1">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center shadow-md overflow-hidden" :class="social.bg">
-                   <svg v-if="social.name === 'Partilhar'" viewBox="0 0 40 40" class="w-6 h-6 fill-white">
-                      <path d="M39.084,11.043a9.472,9.472,0,0,1-.628.812q-4.419,4.614-8.851,9.219a1.176,1.176,0,0,1-1.126.451,1.1,1.1,0,0,1-.868-1.194c0-1.368,0-2.738,0-4.107v-.347c-.042-.031-.059-.054-.078-.055a12.329,12.329,0,0,0-9.671,3.139,12.019,12.019,0,0,0-2.493,3.316,1.08,1.08,0,0,1-1.481.576.968.968,0,0,1-.6-.867,18.273,18.273,0,0,1,.6-6.3A13.785,13.785,0,0,1,24.744,6a22.662,22.662,0,0,1,2.5-.254c.109-.011.219-.012.364-.02V5.343c0-1.3.019-2.6-.008-3.9A1.36,1.36,0,0,1,28.4,0h.537A6.223,6.223,0,0,1,29.7.582q4.389,4.546,8.759,9.112a9.284,9.284,0,0,1,.627.811ZM40,33.7V19.919a1.852,1.852,0,0,0-3.7,0V33.7A2.6,2.6,0,0,1,33.7,36.3H6.3A2.6,2.6,0,0,1,3.7,33.7V12.6A2.6,2.6,0,0,1,6.3,10.011h5.469a1.852,1.852,0,0,0,0-3.7H6.3A6.3,6.3,0,0,0,0,12.6V33.7A6.3,6.3,0,0,0,6.3,40H33.7A6.3,6.3,0,0,0,40,33.7Z" />
-                   </svg>
-                   <img v-else :src="social.icon" class="w-full h-full object-cover" />
-                </div>
-                <span class="text-[9px] text-gray-500">{{ social.name }}</span>
+        <div class="flex flex-col space-y-4">
+          <div class="flex items-center space-x-4">
+            <div class="flex flex-col items-center flex-shrink-0">
+              <div class="bg-white p-1 rounded-lg mb-1.5">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://398.win.mooo.com" alt="QR Code" class="w-16 h-16" />
               </div>
+              <button class="bg-[#fca000] text-black text-[9px] font-black py-1 px-2.5 rounded-full shadow-lg whitespace-nowrap">SALVAR QR CODE</button>
+            </div>
+            
+            <div class="flex-1 space-y-2 min-w-0">
+              <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Link de convite</div>
+              <div class="flex items-center bg-[#1a1a1a] rounded-lg border border-gray-800 p-2 relative h-9 px-3">
+                <span class="text-[11px] text-[#fca000] truncate font-medium">https://398.win.mooo.com</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Social Share Bar (Fixed overlap) -->
+          <div class="flex justify-between items-center bg-[#0a0a0a]/50 p-2 rounded-xl border border-white/5">
+            <div v-for="(social, i) in socials" :key="i" class="flex flex-col items-center space-y-1">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center shadow-md overflow-hidden transition-transform active:scale-90" :class="social.bg">
+                <svg v-if="social.name === 'Partilhar'" viewBox="0 0 40 40" class="w-5 h-5 fill-white">
+                  <path d="M39.084,11.043a9.472,9.472,0,0,1-.628.812q-4.419,4.614-8.851,9.219a1.176,1.176,0,0,1-1.126.451,1.1,1.1,0,0,1-.868-1.194c0-1.368,0-2.738,0-4.107v-.347c-.042-.031-.059-.054-.078-.055a12.329,12.329,0,0,0-9.671,3.139,12.019,12.019,0,0,0-2.493,3.316,1.08,1.08,0,0,1-1.481.576.968.968,0,0,1-.6-.867,18.273,18.273,0,0,1,.6-6.3A13.785,13.785,0,0,1,24.744,6a22.662,22.662,0,0,1,2.5-.254c.109-.011.219-.012.364-.02V5.343c0-1.3.019-2.6-.008-3.9A1.36,1.36,0,0,1,28.4,0h.537A6.223,6.223,0,0,1,29.7.582q4.389,4.546,8.759,9.112a9.284,9.284,0,0,1,.627.811ZM40,33.7V19.919a1.852,1.852,0,0,0-3.7,0V33.7A2.6,2.6,0,0,1,33.7,36.3H6.3A2.6,2.6,0,0,1,3.7,33.7V12.6A2.6,2.6,0,0,1,6.3,10.011h5.469a1.852,1.852,0,0,0,0-3.7H6.3A6.3,6.3,0,0,0,0,12.6V33.7A6.3,6.3,0,0,0,6.3,40H33.7A6.3,6.3,0,0,0,40,33.7Z" />
+                </svg>
+                <img v-else :src="social.icon" class="w-full h-full object-cover" />
+              </div>
+              <span class="text-[8px] text-gray-500 font-bold">{{ social.name }}</span>
             </div>
           </div>
         </div>
