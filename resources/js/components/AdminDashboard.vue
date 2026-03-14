@@ -356,8 +356,14 @@ const saveSettings = async () => {
     };
     const res = await fetch('/api/admin/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(dataToSave) });
     if (res.ok) alert("Configurações atualizadas com sucesso!");
-    else alert("Erro ao salvar.");
-  } catch(e) { console.error(e); }
+    else {
+      const errorData = await res.json().catch(() => ({}));
+      alert("Erro ao salvar: " + (errorData.message || res.statusText));
+    }
+  } catch(e) { 
+    console.error(e); 
+    alert("Erro na requisição: " + e.message);
+  }
   isSaving.value = false;
 };
 

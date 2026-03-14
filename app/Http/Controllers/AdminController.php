@@ -18,21 +18,27 @@ class AdminController extends Controller
     // Update settings (Admin only)
     public function updateSettings(Request $request)
     {
-        $settings = $request->all();
+        try {
+            $settings = $request->all();
+            \Log::info('Updating settings:', $settings);
 
-        foreach ($settings as $key => $value) {
-            // Store arrays as JSON strings
-            if (is_array($value)) {
-                $value = json_encode($value);
+            foreach ($settings as $key => $value) {
+                // Store arrays as JSON strings
+                if (is_array($value)) {
+                    $value = json_encode($value);
+                }
+
+                GlobalSetting::updateOrCreate(
+                    ['key' => $key],
+                    ['value' => $value]
+                );
             }
 
-            GlobalSetting::updateOrCreate(
-                ['key' => $key],
-                ['value' => $value]
-            );
+            return response()->json(['message' => 'Configurações atualizadas com sucesso']);
+        } catch (\Exception $e) {
+            \Log::error('Error updating settings: ' . $e->getMessage());
+            return response()->json(['message' => 'Erro interno: ' . $e->getMessage()], 500);
         }
-
-        return response()->json(['message' => 'Configurações atualizadas com sucesso']);
     }
 
     // Upload an image (Backgrounds, Banners, Icons)
