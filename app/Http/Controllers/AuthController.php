@@ -58,10 +58,13 @@ class AuthController extends Controller
 
         Auth::login($user);
 
+        $token = $user->createToken('admin-token')->plainTextToken;
+
         return response()->json([
             'message' => 'Login successful',
-            'user' => $user
-        ]);;
+            'user' => $user,
+            'token' => $token
+        ]);
     }
 
     public function me(Request $request)

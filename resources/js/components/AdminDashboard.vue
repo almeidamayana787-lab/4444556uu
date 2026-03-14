@@ -279,6 +279,19 @@ const coverModalProvider = ref(null);
 
 const totalGamesCount = computed(() => apiProviders.value.reduce((acc, p) => acc + (p.games?.length || 0), 0));
 
+const adminToken = ref(localStorage.getItem('admin_token') || '');
+
+const fetchWithAuth = async (url, options = {}) => {
+  const headers = {
+    ...options.headers,
+    'Accept': 'application/json',
+  };
+  if (adminToken.value) {
+    headers['Authorization'] = `Bearer ${adminToken.value}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 // Login
 const handleLogin = async () => {
   if (!loginUser.value || !loginPass.value) return;
@@ -288,7 +301,14 @@ const handleLogin = async () => {
     const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ login: loginUser.value, password: loginPass.value }) });
     if (res.ok) {
       const data = await res.json();
-      if (data.user?.is_admin) { isAdminLoggedIn.value = true; fetchSettings(); } 
+      if (data.user?.is_admin) { 
+        if (data.token) {
+          adminToken.value = data.token;
+          localStorage.setItem('admin_token', data.token);
+        }
+        isAdminLoggedIn.value = true; 
+        fetchSettings(); 
+      } 
       else { loginError.value = 'Usuário não tem privilégios de administrador.'; }
     } else { loginError.value = 'Login falhou. Verifique suas credenciais.'; }
   } catch (err) { loginError.value = 'Erro ao contatar o servidor.'; }
@@ -299,7 +319,7 @@ const handleLogin = async () => {
 const fetchSettings = async () => {
   isLoading.value = true;
   try {
-    const res = await fetch('/api/settings');
+    const res = await fetchWithAuth('/api/settings');
     if (res.ok) {
       const data = await res.json();
       if (data.home_banners) try { data.home_banners = JSON.parse(data.home_banners); } catch(e) {}
@@ -313,7 +333,7 @@ const fetchSettings = async () => {
   
   // Also fetch existing games
   try {
-    const res = await fetch('/api/admin/games-grouped', { headers: { 'Accept': 'application/json' }});
+    const res = await fetchWithAuth('/api/admin/games-grouped');
     if (res.ok) { apiProviders.value = await res.json(); }
   } catch(e) {}
   
@@ -325,7 +345,7 @@ const uploadFile = async (event, settingKey, folder) => {
   const file = event.target.files[0]; if (!file) return;
   const fd = new FormData(); fd.append('image', file); fd.append('folder', folder);
   try {
-    const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd });
+    const res = await fetchWithAuth('/api/admin/upload', { method: 'POST', body: fd });
     if (res.ok) { const d = await res.json(); settings.value[settingKey] = d.url; }
     else alert("Falha no upload");
   } catch(e) { console.error(e); }
@@ -334,7 +354,7 @@ const uploadBanner = async (event) => {
   const file = event.target.files[0]; if (!file) return;
   const fd = new FormData(); fd.append('image', file); fd.append('folder', 'banner');
   try {
-    const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd });
+    const res = await fetchWithAuth('/api/admin/upload', { method: 'POST', body: fd });
     if (res.ok) { const d = await res.json(); settings.value.home_banners.push(d.url); }
   } catch(e) { console.error(e); }
 };
@@ -354,7 +374,7 @@ const saveSettings = async () => {
       api_agent_token: apiAgentToken.value,
       api_webhook_secret: apiWebhookSecret.value
     };
-    const res = await fetch('/api/admin/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(dataToSave) });
+    const res = await fetchWithAuth('/api/admin/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataToSave) });
     if (res.ok) alert("Configurações atualizadas com sucesso!");
     else {
       const errorData = await res.json().catch(() => ({}));
@@ -371,7 +391,7 @@ const saveSettings = async () => {
 const testApiConnection = async () => {
   apiLoading.value = true; apiMessage.value = '';
   try {
-    const res = await fetch('/api/admin/test-api', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ agent_code: apiAgentCode.value, agent_token: apiAgentToken.value, webhook_secret: apiWebhookSecret.value }) });
+    const res = await fetchWithAuth('/api/admin/test-api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ agent_code: apiAgentCode.value, agent_token: apiAgentToken.value, webhook_secret: apiWebhookSecret.value }) });
     const data = await res.json();
     apiSuccess.value = data.success;
     apiMessage.value = data.message + (data.agent ? ` | Saldo: R$ ${data.agent.balance}` : '');
@@ -382,13 +402,13 @@ const testApiConnection = async () => {
 const fetchGamesFromApi = async () => {
   fetchingGames.value = true; apiLoading.value = true; apiMessage.value = '';
   try {
-    const res = await fetch('/api/admin/fetch-games', { method: 'POST', headers: { 'Accept': 'application/json' }});
+    const res = await fetchWithAuth('/api/admin/fetch-games', { method: 'POST' });
     const data = await res.json();
     apiSuccess.value = data.success;
     apiMessage.value = data.message;
     if (data.success && data.providers) apiProviders.value = data.providers;
     // Reload grouped data
-    const res2 = await fetch('/api/admin/games-grouped', { headers: { 'Accept': 'application/json' }});
+    const res2 = await fetchWithAuth('/api/admin/games-grouped');
     if (res2.ok) apiProviders.value = await res2.json();
   } catch(e) { apiSuccess.value = false; apiMessage.value = 'Erro: ' + e.message; }
   fetchingGames.value = false; apiLoading.value = false;
@@ -397,7 +417,7 @@ const fetchGamesFromApi = async () => {
 const deleteAllGames = async () => {
   if (!confirm('Tem certeza que deseja excluir todos os jogos importados?')) return;
   try {
-    const res = await fetch('/api/admin/delete-games', { method: 'POST', headers: { 'Accept': 'application/json' }});
+    const res = await fetchWithAuth('/api/admin/delete-games', { method: 'POST' });
     const data = await res.json();
     apiSuccess.value = data.success; apiMessage.value = data.message;
     apiProviders.value = [];
@@ -419,7 +439,7 @@ const sendGameToPopular = async (game) => {
     const currentPopular = [];
     apiProviders.value.forEach(p => p.games?.forEach(g => { if (g.is_popular) currentPopular.push(g.id); }));
     if (!currentPopular.includes(game.id)) currentPopular.push(game.id);
-    const res = await fetch('/api/admin/set-popular', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ game_ids: currentPopular.slice(0, 9) }) });
+    const res = await fetchWithAuth('/api/admin/set-popular', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game_ids: currentPopular.slice(0, 9) }) });
     if (res.ok) { game.is_popular = true; apiMessage.value = `"${game.game_name}" adicionado aos Populares!`; apiSuccess.value = true; }
   } catch(e) { console.error(e); }
 };
@@ -428,7 +448,7 @@ const removeGameFromPopular = async (game) => {
   const currentPopular = [];
   apiProviders.value.forEach(p => p.games?.forEach(g => { if (g.is_popular && g.id !== game.id) currentPopular.push(g.id); }));
   try {
-    const res = await fetch('/api/admin/set-popular', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ game_ids: currentPopular }) });
+    const res = await fetchWithAuth('/api/admin/set-popular', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game_ids: currentPopular }) });
     if (res.ok) { game.is_popular = false; apiMessage.value = `"${game.game_name}" removido dos Populares.`; apiSuccess.value = true; }
   } catch(e) { console.error(e); }
 };
@@ -445,7 +465,7 @@ const handleCoverUpload = async (event) => {
   fd.append('cover_image', file);
   fd.append('provider_code', coverModalProvider.value.code);
   try {
-    const res = await fetch('/api/admin/set-slot-provider', { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd });
+    const res = await fetchWithAuth('/api/admin/set-slot-provider', { method: 'POST', body: fd });
     if (res.ok) {
       const data = await res.json();
       coverModalProvider.value.is_slot = true;
@@ -459,7 +479,7 @@ const handleCoverUpload = async (event) => {
 const removeProviderFromSlots = async (provider) => {
   openProviderMenu.value = null;
   try {
-    await fetch('/api/admin/remove-slot-provider', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ provider_code: provider.code }) });
+    await fetchWithAuth('/api/admin/remove-slot-provider', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ provider_code: provider.code }) });
     provider.is_slot = false; provider.cover_image = null;
     apiMessage.value = `"${provider.name}" removido dos Slots.`; apiSuccess.value = true;
   } catch(e) { console.error(e); }
