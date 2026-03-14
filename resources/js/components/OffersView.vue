@@ -17,14 +17,14 @@
         <div class="flex items-start space-x-4">
           <div class="flex flex-col items-center">
             <div class="bg-white p-2 rounded-lg mb-2">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://30win.org" alt="QR Code" class="w-20 h-20" />
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://398.win.mooo.com" alt="QR Code" class="w-20 h-20" />
             </div>
             <button class="bg-[#fca000] text-black text-[10px] font-bold py-1 px-3 rounded-full shadow-lg">Salvar código de..</button>
           </div>
           <div class="flex-1 space-y-3">
             <div class="text-xs text-gray-500 mb-1">Link de convite</div>
             <div class="flex items-center bg-[#1a1a1a] rounded-lg border border-gray-800 p-2 relative h-10 px-3">
-              <span class="text-xs text-gray-400 truncate flex-1">https://30win.org</span>
+              <span class="text-xs text-gray-400 truncate flex-1">https://398.win.mooo.com</span>
             </div>
             <div class="flex justify-between items-center pt-1 px-1">
               <div v-for="(social, i) in socials" :key="i" class="flex flex-col items-center space-y-1">
