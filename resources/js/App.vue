@@ -17,10 +17,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#111111] text-white font-sans w-full overflow-x-hidden">
+  <div class="min-h-screen bg-[#111111] text-white font-sans w-full overflow-x-hidden relative">
     
     <!-- Main content container -->
-    <div v-if="isLoaded" class="fade-in max-w-[480px] mx-auto bg-[#1a1a1a] min-h-screen relative shadow-2xl border-x border-yellow-900/10 pb-24">
+    <div v-if="isLoaded" class="fade-in max-w-[480px] mx-auto bg-[#1a1a1a] min-h-screen relative shadow-2xl border-x border-yellow-900/10 pb-32">
       <Header />
       
       <!-- Banner -->
@@ -37,13 +37,13 @@ onMounted(() => {
       <GameGrid title="Popular" iconSrc="/casino_icons/popular.avif" sectionId="popular" />
       <GameGrid title="Slots" iconSrc="/casino_icons/slots.avif" sectionId="slots" />
       <GameGrid title="Retrô" iconSrc="/casino_icons/retro.png" sectionId="retro" />
-
-      <!-- Bottom Navigation -->
-      <BottomNav />
     </div>
 
+    <!-- Bottom Navigation - Placed top-level with high z-index -->
+    <BottomNav v-if="isLoaded" />
+
     <!-- Loading Screen -->
-    <div v-else class="fixed inset-0 z-50 flex items-center justify-center bg-[#1a1a1a] loading-fade">
+    <div v-else class="fixed inset-0 z-[200] flex items-center justify-center bg-[#1a1a1a] loading-fade">
       <div class="flex flex-col items-center">
         <img src="/image-removebg-preview.png" alt="Logo" class="w-48 animate-pulse drop-shadow-[0_0_15px_rgba(252,160,0,0.5)] mb-4" />
         <div class="w-12 h-12 border-4 border-[#fca000] border-t-transparent rounded-full animate-spin"></div>
@@ -60,10 +60,12 @@ onMounted(() => {
   --surface-color: #1a1a1a;
 }
 
-body {
+html, body {
   background-color: var(--bg-color);
   color: #fff;
   scrollbar-width: none;
+  margin: 0;
+  padding: 0;
 }
 
 body::-webkit-scrollbar {
