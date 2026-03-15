@@ -39,3 +39,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/remove-slot-provider', [GameApiController::class, 'removeSlotProvider']);
     Route::get('/admin/games-grouped', [GameApiController::class, 'getAllGamesGrouped']);
 });
+
+// Webhook for game callbacks (No auth required by MAX API)
+Route::post('/webhook/game-callback', [GameApiController::class, 'handleCallback']);

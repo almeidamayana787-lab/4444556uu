@@ -263,20 +263,88 @@ class GameApiController extends Controller
     {
         $creds = $this->getCredentials();
         $gameCode = $request->game_code;
-        $userCode = 'player_' . ($request->user_id ?? auth()->id() ?? rand(1000, 9999));
+
+        $game = Game::where('game_code', $gameCode)->first();
+        $providerCode = $game ? $game->provider_code : ($request->provider_code ?? 'PGSOFT');
+
+        $user = auth('sanctum')->user();
+        $userId = $user ? $user->id : ($request->user_id ?? 0);
+        $userCode = 'player_' . $userId;
+
+        // Callback URL for game results
+        $callbackUrl = config('app.url') . '/api/webhook/game-callback';
 
         try {
-            $response = Http::post($this->apiUrl, [
+            $payload = [
                 'method' => 'game_launch',
                 'agent_code' => $creds['agent_code'],
                 'agent_token' => $creds['agent_token'],
                 'user_code' => $userCode,
                 'game_code' => $gameCode,
-            ]);
+                'provider_code' => $providerCode,
+                'callback_url' => $callbackUrl,
+                'lang' => 'pt'
+            ];
 
-            return response()->json($response->json());
+            $response = Http::post($this->apiUrl, $payload);
+            $data = $response->json();
+
+            // Log launch for debugging if it fails
+            if (isset($data['status']) && $data['status'] == 0) {
+                \Log::error('MAX API Launch Error', ['payload' => $payload, 'response' => $data]);
+            }
+
+            return response()->json($data);
         } catch (\Exception $e) {
             return response()->json(['status' => 0, 'msg' => $e->getMessage()], 500);
         }
+    }
+
+    // Webhook for game callbacks (results, balance checks, etc.)
+    public function handleCallback(Request $request)
+    {
+        $data = $request->all();
+        \Log::info('MAX API Callback Received', $data);
+
+        // Verify secret if provided
+        $creds = $this->getCredentials();
+        // Some APIs send secret in headers or body. MAX API docs check.
+
+        $method = $data['method'] ?? '';
+
+        if ($method === 'user_balance') {
+            $userCode = $data['user_code'] ?? '';
+            $userId = str_replace('player_', '', $userCode);
+            $user = \App\Models\User::find($userId);
+
+            return response()->json([
+                'status' => 1,
+                'balance' => $user ? (float) $user->balance : 0.00
+            ]);
+        }
+
+        if ($method === 'transaction') {
+            $userCode = $data['user_code'] ?? '';
+            $userId = str_replace('player_', '', $userCode);
+            $user = \App\Models\User::find($userId);
+
+            if (!$user)
+                return response()->json(['status' => 0, 'msg' => 'User not found']);
+
+            $amount = (float) ($data['amount'] ?? 0);
+            $type = $data['type'] ?? 'win'; // win / lose / bet
+
+            // Adjust balance
+            // For Max API: amount is the change. win is positive, bet/lose is negative.
+            $user->balance += $amount;
+            $user->save();
+
+            return response()->json([
+                'status' => 1,
+                'balance' => (float) $user->balance
+            ]);
+        }
+
+        return response()->json(['status' => 1]);
     }
 }
