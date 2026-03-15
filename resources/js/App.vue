@@ -85,17 +85,17 @@ const openProviderPage = (providerCode) => {
     <!-- Admin Panel -->
     <AdminDashboard v-if="currentView === 'admin'" @close="currentView = 'home'" />
 
-    <!-- Provider Detail Page -->
-    <ProviderPage v-else-if="currentView === 'provider'" :providerCode="selectedProviderCode" @close="currentView = 'home'" />
-
     <!-- App Container -->
     <div v-else-if="isLoaded" class="fade-in max-w-[352px] mx-auto bg-[#111111] min-h-screen relative shadow-2xl border-x border-yellow-900/10">
+
+      <!-- Provider Detail Page -->
+      <ProviderPage v-if="currentView === 'provider'" :providerCode="selectedProviderCode" @close="currentView = 'home'" />
 
       <!-- Background -->
       <div class="absolute inset-0 z-0 bg-cover bg-top bg-no-repeat pointer-events-none" :style="{ backgroundImage: `url('${globalSettings.home_background}')` }"></div>
 
       <!-- Content wrapper -->
-      <div class="relative z-10">
+      <div v-if="currentView !== 'provider'" class="relative z-10">
         <!-- Home View -->
         <div v-if="currentView === 'home'" class="pb-32">
           <Header />
