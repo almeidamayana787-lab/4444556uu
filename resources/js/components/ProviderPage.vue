@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-col min-h-screen bg-[#111] text-white">
+  <div class="flex flex-col min-h-screen text-white relative z-10">
     <!-- Header -->
-    <header class="flex items-center px-4 py-3 bg-[#121212] sticky top-0 z-50 border-b border-[#fca000]/10">
+    <header class="flex items-center px-4 py-3 bg-[#121212]/80 backdrop-blur-md sticky top-0 z-50 border-b border-[#fca000]/10">
       <button @click="$emit('close')" class="p-1 mr-3">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -22,11 +22,11 @@
 
     <div class="flex flex-1 overflow-hidden">
       <!-- Left Sidebar: Provider Tabs -->
-      <div class="w-16 bg-[#0d0d0d] border-r border-gray-800 overflow-y-auto flex flex-col items-center py-2 space-y-1">
+      <div class="w-16 bg-[#0d0d0d]/50 backdrop-blur-sm border-r border-gray-800 overflow-y-auto flex flex-col items-center py-2 space-y-1 scrollbar-hide">
         <button 
           @click="selectedProvider = null"
-          class="w-12 h-12 rounded-lg flex flex-col items-center justify-center text-[8px] font-bold transition"
-          :class="selectedProvider === null ? 'bg-[#fca000] text-black' : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#222]'"
+          class="w-12 h-12 rounded-lg flex flex-col items-center justify-center text-[8px] font-bold transition flex-shrink-0"
+          :class="selectedProvider === null ? 'bg-[#fca000] text-black shadow-[0_0_10px_rgba(252,160,0,0.3)]' : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#222]'"
         >
           <span class="text-sm">🎰</span>
           <span>Slots</span>
@@ -34,11 +34,14 @@
         <button 
           v-for="prov in providers" :key="prov.code"
           @click="selectedProvider = prov.code"
-          class="w-12 h-12 rounded-lg flex flex-col items-center justify-center text-[8px] font-bold transition"
-          :class="selectedProvider === prov.code ? 'bg-[#fca000] text-black' : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#222]'"
+          class="w-12 h-12 rounded-lg flex flex-col items-center justify-center text-[8px] font-bold transition flex-shrink-0 overflow-hidden"
+          :class="selectedProvider === prov.code ? 'bg-[#fca000] text-black shadow-[0_0_10px_rgba(252,160,0,0.3)]' : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#222]'"
         >
-          <span class="text-sm font-black">{{ prov.code.substring(0,2) }}</span>
-          <span class="truncate w-full text-center">{{ prov.code }}</span>
+          <img v-if="prov.logo" :src="prov.logo" class="w-full h-full object-contain p-1" />
+          <template v-else>
+            <span class="text-sm font-black">{{ prov.code.substring(0,2) }}</span>
+            <span class="truncate w-full text-center px-0.5">{{ prov.name || prov.code }}</span>
+          </template>
         </button>
       </div>
 

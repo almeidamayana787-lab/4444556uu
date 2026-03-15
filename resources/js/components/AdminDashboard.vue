@@ -175,6 +175,7 @@
                     <button @click.stop="toggleProviderMenu(provider.code)" class="p-2 hover:bg-gray-800 rounded-lg transition text-gray-400">⋮</button>
                     <div v-if="openProviderMenu === provider.code" class="absolute right-0 top-10 bg-[#222] border border-gray-700 rounded-lg shadow-xl z-50 min-w-[200px]">
                       <button @click.stop="sendProviderToSlots(provider)" class="w-full text-left px-4 py-3 hover:bg-gray-700 text-sm flex items-center gap-2 rounded-t-lg">🎰 Enviar para Slots</button>
+                      <button @click.stop="openLogoModal(provider)" class="w-full text-left px-4 py-3 hover:bg-gray-700 text-sm flex items-center gap-2">🖼️ Alterar Logo (Sidebar)</button>
                       <button @click.stop="removeProviderFromSlots(provider)" class="w-full text-left px-4 py-3 hover:bg-gray-700 text-sm flex items-center gap-2 text-red-400 rounded-b-lg">✕ Remover dos Slots</button>
                     </div>
                   </div>
@@ -215,6 +216,18 @@
               <input type="file" @change="handleCoverUpload" accept="image/*" class="text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white" />
               <div class="flex justify-end gap-2">
                 <button @click="showCoverModal = false" class="px-4 py-2 bg-gray-700 rounded-lg text-sm">Cancelar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Provider Logo Upload Modal -->
+          <div v-if="showLogoModal" class="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4" @click.self="showLogoModal = false">
+            <div class="bg-[#1a1a1a] rounded-2xl p-6 max-w-md w-full border border-gray-700 space-y-4">
+              <h3 class="text-lg font-bold text-white">Selecionar Logo para "{{ logoModalProvider?.name }}"</h3>
+              <p class="text-xs text-gray-400">Tamanho ideal: ícone quadrado ou retangular com fundo transparente.</p>
+              <input type="file" @change="handleLogoUpload" accept="image/*" class="text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-yellow-600 file:text-black" />
+              <div class="flex justify-end gap-2">
+                <button @click="showLogoModal = false" class="px-4 py-2 bg-gray-700 rounded-lg text-sm">Cancelar</button>
               </div>
             </div>
           </div>
@@ -275,7 +288,9 @@ const expandedProviders = ref([]);
 const openProviderMenu = ref(null);
 const openGameMenu = ref(null);
 const showCoverModal = ref(false);
+const showLogoModal = ref(false);
 const coverModalProvider = ref(null);
+const logoModalProvider = ref(null);
 
 const totalGamesCount = computed(() => apiProviders.value.reduce((acc, p) => acc + (p.games?.length || 0), 0));
 
@@ -469,12 +484,45 @@ const handleCoverUpload = async (event) => {
     if (res.ok) {
       const data = await res.json();
       coverModalProvider.value.is_slot = true;
-      coverModalProvider.value.cover_image = data.provider?.cover_image;
       apiMessage.value = `"${coverModalProvider.value.name}" adicionado aos Slots!`;
       apiSuccess.value = true;
+      showCoverModal.value = false;
+      fetchGamesGrouped();
     }
   } catch(e) { console.error(e); }
-  showCoverModal.value = false;
+};
+
+const openLogoModal = (provider) => {
+  logoModalProvider.value = provider;
+  showLogoModal.value = true;
+  openProviderMenu.value = null;
+};
+
+const handleLogoUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const fd = new FormData();
+  fd.append('logo', file);
+  fd.append('provider_code', logoModalProvider.value.code);
+
+  try {
+    const res = await fetchWithAuth('/api/admin/set-provider-logo', {
+      method: 'POST',
+      body: fd
+    });
+    const data = await res.json();
+    if (data.success) {
+      apiMessage.value = 'Logo atualizada com sucesso!';
+      apiSuccess.value = true;
+      showLogoModal.value = false;
+      fetchGamesGrouped();
+    }
+  } catch (err) {
+    console.error(err);
+    apiMessage.value = 'Erro ao enviar logo.';
+    apiSuccess.value = false;
+  }
 };
 const removeProviderFromSlots = async (provider) => {
   openProviderMenu.value = null;

@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/delete-games', [GameApiController::class, 'deleteGames']);
     Route::post('/admin/set-popular', [GameApiController::class, 'setPopular']);
     Route::post('/admin/set-slot-provider', [GameApiController::class, 'setSlotProvider']);
+    Route::post('/admin/set-provider-logo', [GameApiController::class, 'setProviderLogo']);
     Route::post('/admin/remove-slot-provider', [GameApiController::class, 'removeSlotProvider']);
     Route::get('/admin/games-grouped', [GameApiController::class, 'getAllGamesGrouped']);
 });

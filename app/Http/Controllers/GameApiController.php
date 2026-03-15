@@ -211,6 +211,27 @@ class GameApiController extends Controller
         return response()->json(['success' => true, 'provider' => $provider]);
     }
 
+    // Upload provider logo for sidebar
+    public function setProviderLogo(Request $request)
+    {
+        $providerCode = $request->provider_code;
+        $provider = Provider::where('code', $providerCode)->first();
+
+        if (!$provider) {
+            return response()->json(['success' => false, 'message' => 'Provedor não encontrado'], 404);
+        }
+
+        if ($request->hasFile('logo')) {
+            $file = $request->file('logo');
+            $filename = 'logo_' . strtolower($providerCode) . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('provider_logos'), $filename);
+            $provider->logo = '/provider_logos/' . $filename;
+            $provider->save();
+        }
+
+        return response()->json(['success' => true, 'logo' => $provider->logo]);
+    }
+
     // Remove provider from slots
     public function removeSlotProvider(Request $request)
     {
