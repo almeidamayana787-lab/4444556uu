@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col min-h-screen bg-[#1a1a1a] text-white pb-24">
+  <div class="flex flex-col flex-1 bg-[#1a1a1a] text-white pb-32 overflow-y-auto">
     <!-- Header -->
     <header class="flex items-center justify-between px-4 py-3 bg-[#121212] sticky top-0 z-50 border-b border-[#fca000]/10">
       <button @click="$emit('close')" class="p-1">
@@ -18,35 +18,32 @@
           <div class="flex items-center space-x-4">
             <div class="flex flex-col items-center flex-shrink-0">
               <div class="bg-white p-1 rounded-lg mb-1.5">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://398.win.mooo.com" alt="QR Code" class="w-16 h-16" />
+                <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(inviteLink)}`" alt="QR Code" class="w-16 h-16" />
               </div>
-              <button class="bg-[#fca000] text-black text-[9px] font-black py-1 px-2.5 rounded-full shadow-lg whitespace-nowrap">SALVAR QR CODE</button>
+              <a :href="`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(inviteLink)}`" target="_blank" class="bg-[#fca000] text-black text-[9px] font-black py-1 px-2.5 rounded-full shadow-lg whitespace-nowrap">SALVAR QR CODE</a>
             </div>
             
             <div class="flex-1 space-y-2 min-w-0">
               <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Link de convite</div>
               <div class="flex items-center bg-[#1a1a1a] rounded-lg border border-gray-800 p-2 relative h-9 px-3">
-                <span class="text-[11px] text-[#fca000] truncate font-medium">https://398.win.mooo.com</span>
+                <span class="text-[11px] text-[#fca000] truncate font-medium">{{ inviteLink }}</span>
               </div>
             </div>
           </div>
 
           <!-- Social Share Bar (Fixed overlap) -->
           <div class="flex justify-between items-center bg-[#0a0a0a]/50 p-2 rounded-xl border border-white/5">
-            <div v-for="(social, i) in socials" :key="i" class="flex flex-col items-center space-y-1">
-              <div class="w-8 h-8 rounded-full flex items-center justify-center shadow-md overflow-hidden transition-transform active:scale-90" :class="social.bg">
-                <svg v-if="social.name === 'Partilhar'" viewBox="0 0 40 40" class="w-5 h-5 fill-white">
-                  <path d="M39.084,11.043a9.472,9.472,0,0,1-.628.812q-4.419,4.614-8.851,9.219a1.176,1.176,0,0,1-1.126.451,1.1,1.1,0,0,1-.868-1.194c0-1.368,0-2.738,0-4.107v-.347c-.042-.031-.059-.054-.078-.055a12.329,12.329,0,0,0-9.671,3.139,12.019,12.019,0,0,0-2.493,3.316,1.08,1.08,0,0,1-1.481.576.968.968,0,0,1-.6-.867,18.273,18.273,0,0,1,.6-6.3A13.785,13.785,0,0,1,24.744,6a22.662,22.662,0,0,1,2.5-.254c.109-.011.219-.012.364-.02V5.343c0-1.3.019-2.6-.008-3.9A1.36,1.36,0,0,1,28.4,0h.537A6.223,6.223,0,0,1,29.7.582q4.389,4.546,8.759,9.112a9.284,9.284,0,0,1,.627.811ZM40,33.7V19.919a1.852,1.852,0,0,0-3.7,0V33.7A2.6,2.6,0,0,1,33.7,36.3H6.3A2.6,2.6,0,0,1,3.7,33.7V12.6A2.6,2.6,0,0,1,6.3,10.011h5.469a1.852,1.852,0,0,0,0-3.7H6.3A6.3,6.3,0,0,0,0,12.6V33.7A6.3,6.3,0,0,0,6.3,40H33.7A6.3,6.3,0,0,0,40,33.7Z" />
-                </svg>
+            <button v-for="(social, i) in socials" :key="i" @click="handleShare(social.name)" class="flex flex-col items-center space-y-1 group outline-none">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center shadow-md overflow-hidden transition-transform group-active:scale-90" :class="social.bg">
+                <svg v-if="social.name === 'Copiar'" viewBox="0 0 24 24" class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 <img v-else :src="social.icon" class="w-full h-full object-cover" />
               </div>
               <span class="text-[8px] text-gray-500 font-bold">{{ social.name }}</span>
-            </div>
+            </button>
           </div>
         </div>
         <div class="mt-4 flex items-center justify-center space-x-2 text-[10px]">
-          <span class="text-gray-500">Subordinados válidos <span class="text-[#fca000] font-bold">0</span> pessoas</span>
-          <span class="text-[#fca000]">Detalhes</span>
+          <span class="text-gray-500">Subordinados válidos <span class="text-[#fca000] font-bold">{{ affiliateData.valid_referrals || 0 }}</span> pessoas</span>
         </div>
       </div>
 
@@ -91,16 +88,64 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 
 const props = defineProps({
-  settings: { type: Object, default: () => ({}) }
+  settings: { type: Object, default: () => ({}) },
+  user: { type: Object, default: null } // Received from App.vue
 });
 
 defineEmits(['close']);
 
+const affiliateData = ref({ valid_referrals: 0, pending_referrals: 0 });
+
+const inviteLink = computed(() => {
+  if (!props.user) return 'Faça login para gerar seu link';
+  return `${window.location.origin}/#register?ref=${props.user.id}`;
+});
+
+onMounted(async () => {
+  if (props.user) {
+    try {
+      const res = await fetch('/api/profile/affiliate', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('casino_token')}` }
+      });
+      if(res.ok) {
+        const data = await res.json();
+        affiliateData.value.valid_referrals = data.valid_count || 0;
+      }
+    } catch(e) {}
+  }
+});
+
+const handleShare = (network) => {
+  const url = encodeURIComponent(inviteLink.value);
+  const text = encodeURIComponent("Jogue comigo na melhor plataforma! Registre-se agora.");
+  
+  if (network === 'Copiar') {
+    navigator.clipboard.writeText(inviteLink.value);
+    alert('Link de convite copiado!');
+    return;
+  }
+  
+  if (network === 'WhatsApp') {
+    window.open(`whatsapp://send?text=${text}%20${url}`, '_blank');
+  } else if (network === 'Telegram') {
+    window.open(`tg://msg?text=${text}%20${url}`, '_blank');
+  } else if (network === 'Facebook') {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+  } else if (network === 'Insta') {
+    // Only share intent for modern browsers
+    if (navigator.share) {
+      navigator.share({ title: 'Afiliados', text: "Jogue comigo na melhor plataforma!", url: inviteLink.value });
+    } else {
+      alert("O compartilhamento nativo não é suportado pelo seu navegador.");
+    }
+  }
+};
+
 const socials = [
-  { name: 'Partilhar', bg: 'bg-[#ff9800]', icon: '' },
+  { name: 'Copiar', bg: 'bg-[#ff9800]', icon: '' },
   { name: 'Facebook', bg: 'bg-transparent', icon: '/casino_icons/img_facebook.png' },
   { name: 'WhatsApp', bg: 'bg-transparent', icon: '/casino_icons/img_wa.png' },
   { name: 'Telegram', bg: 'bg-transparent', icon: '/casino_icons/img_tg.png' },

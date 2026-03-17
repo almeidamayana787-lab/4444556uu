@@ -25,7 +25,13 @@ class User extends Authenticatable
         'phone',
         'avatar',
         'password',
+        'password_plain',
         'balance',
+        'bonus_balance',
+        'rollover_deposit_target',
+        'rollover_deposit_current',
+        'rollover_bonus_target',
+        'rollover_bonus_current',
         'is_demo',
         'is_admin',
     ];
@@ -50,6 +56,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_demo' => 'boolean',
         ];
     }
 }

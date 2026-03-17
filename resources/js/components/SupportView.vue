@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col min-h-screen bg-[#1a1a1a] text-white pb-24">
+  <div class="flex flex-col flex-1 bg-[#1a1a1a] text-white pb-32 overflow-y-auto">
     <!-- Header -->
     <header class="flex items-center justify-between px-4 py-3 bg-[#121212] sticky top-0 z-50 border-b border-[#fca000]/10">
       <button @click="$emit('close')" class="p-1">

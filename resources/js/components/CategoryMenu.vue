@@ -1,6 +1,6 @@
 <template>
   <div class="px-3 mt-4">
-    <div class="flex items-center space-x-4 overflow-x-auto hide-scrollbar pb-3">
+    <div class="flex items-center justify-center space-x-2 pb-3">
       <!-- Popular -->
       <a href="#popular" class="flex flex-col items-center min-w-[90px] cursor-pointer group">
         <div class="w-16 h-16 bg-[#222] rounded-2xl flex items-center justify-center mb-1.5 group-hover:bg-[#282828] transition-all border border-yellow-900/20 shadow-xl">

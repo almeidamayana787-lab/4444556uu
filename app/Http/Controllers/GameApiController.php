@@ -18,7 +18,7 @@ class GameApiController extends Controller
         return [
             'agent_code' => GlobalSetting::where('key', 'api_agent_code')->value('value') ?? '',
             'agent_token' => GlobalSetting::where('key', 'api_agent_token')->value('value') ?? '',
-            'agent_secret' => GlobalSetting::where('key', 'api_webhook_secret')->value('value') ?? '',
+            'webhook_secret' => GlobalSetting::where('key', 'api_webhook_secret')->value('value') ?? '',
         ];
     }
 
@@ -187,6 +187,20 @@ class GameApiController extends Controller
         return response()->json(['success' => true, 'message' => count($gameIds) . ' jogos marcados como populares.']);
     }
 
+    // Set games as retro
+    public function setRetro(Request $request)
+    {
+        $gameIds = $request->game_ids ?? [];
+
+        // Reset all retro
+        Game::where('is_retro', true)->update(['is_retro' => false]);
+
+        // Set selected as retro
+        Game::whereIn('id', $gameIds)->update(['is_retro' => true]);
+
+        return response()->json(['success' => true, 'message' => count($gameIds) . ' jogos marcados como retrô.']);
+    }
+
     // Set provider as slot with cover image
     public function setSlotProvider(Request $request)
     {
@@ -289,13 +303,27 @@ class GameApiController extends Controller
         $providerCode = $game ? $game->provider_code : ($request->provider_code ?? 'PGSOFT');
 
         $user = auth('sanctum')->user();
-        $userId = $user ? $user->id : ($request->user_id ?? 0);
+
+        // Demo users don't need balance check for the platform, 
+        // they use the demo balance from MAX API
+        if (!$user->is_demo && ($user->balance + $user->bonus_balance) <= 0) {
+            return response()->json([
+                'status' => 0,
+                'msg' => 'Saldo insuficiente para iniciar o jogo. Por favor, realize um depósito para desfrutar da experiência completa e concorrer a prêmios reais.'
+            ], 200);
+        }
+
+        $userId = $user->id;
         $userCode = 'player_' . $userId;
 
         // Callback URL for game results
         $callbackUrl = config('app.url') . '/api/webhook/game-callback';
 
         try {
+            if (empty($creds['agent_code']) || empty($creds['agent_token'])) {
+                return response()->json(['status' => 0, 'msg' => 'Configuração da API incompleta. Contate o suporte.'], 400);
+            }
+
             $payload = [
                 'method' => 'game_launch',
                 'agent_code' => $creds['agent_code'],
@@ -304,6 +332,7 @@ class GameApiController extends Controller
                 'game_code' => $gameCode,
                 'provider_code' => $providerCode,
                 'callback_url' => $callbackUrl,
+                'is_demo' => $user->is_demo ? 1 : 0,
                 'lang' => 'pt'
             ];
 
@@ -311,13 +340,25 @@ class GameApiController extends Controller
             $data = $response->json();
 
             // Log launch for debugging if it fails
-            if (isset($data['status']) && $data['status'] == 0) {
-                \Log::error('MAX API Launch Error', ['payload' => $payload, 'response' => $data]);
-            }
+            if (!isset($data['status']) || $data['status'] == 0) {
+                \Log::error('MAX API Launch Error Detail', [
+                    'payload' => array_merge($payload, ['agent_token' => '***']),
+                    'response' => $data,
+                    'status_code' => $response->status(),
+                    'body' => $response->body()
+                ]);
 
+                if (isset($data['msg']) && $data['msg'] === 'INTERNAL_ERROR') {
+                    return response()->json([
+                        'status' => 0,
+                        'msg' => 'Estamos enfrentando uma instabilidade técnica momentânea com este provedor. Por favor, tente novamente em alguns instantes ou escolha outro jogo.'
+                    ]);
+                }
+            }
             return response()->json($data);
         } catch (\Exception $e) {
-            return response()->json(['status' => 0, 'msg' => $e->getMessage()], 500);
+            \Log::error('Game Launch Exception', ['message' => $e->getMessage()]);
+            return response()->json(['status' => 0, 'msg' => 'Erro de sistema: ' . $e->getMessage()], 500);
         }
     }
 
@@ -327,21 +368,40 @@ class GameApiController extends Controller
         $data = $request->all();
         \Log::info('MAX API Callback Received', $data);
 
-        // Verify secret if provided
-        $creds = $this->getCredentials();
-        // Some APIs send secret in headers or body. MAX API docs check.
-
         $method = $data['method'] ?? '';
+
+        // Security check: verify agent_secret
+        $creds = $this->getCredentials();
+        $receivedSecret = $data['agent_secret'] ?? '';
+
+        if ($receivedSecret !== ($creds['webhook_secret'] ?? '')) {
+            \Log::warning('MAX API Callback: Invalid secret received', [
+                'received' => $receivedSecret,
+                'expected' => $creds['webhook_secret'] ?? 'NOT_SET'
+            ]);
+            // Still respond with status 1 to avoid retry loops, but don't process
+            return response()->json(['status' => 0, 'msg' => 'Invalid secret']);
+        }
 
         if ($method === 'user_balance') {
             $userCode = $data['user_code'] ?? '';
             $userId = str_replace('player_', '', $userCode);
             $user = \App\Models\User::find($userId);
 
-            return response()->json([
+            if (!$user) {
+                \Log::warning('MAX API Callback: User not found', ['user_code' => $userCode]);
+                return response()->json([
+                    'status' => 1,
+                    'user_balance' => 0.00
+                ]);
+            }
+
+            $response = [
                 'status' => 1,
-                'balance' => $user ? (float) $user->balance : 0.00
-            ]);
+                'user_balance' => (float) ($user->balance + $user->bonus_balance)
+            ];
+            \Log::info('MAX API Callback: Responding to user_balance', $response);
+            return response()->json($response);
         }
 
         if ($method === 'transaction') {
@@ -349,21 +409,49 @@ class GameApiController extends Controller
             $userId = str_replace('player_', '', $userCode);
             $user = \App\Models\User::find($userId);
 
-            if (!$user)
+            if (!$user) {
+                \Log::error('MAX API Transaction: User not found', ['user_code' => $userCode]);
                 return response()->json(['status' => 0, 'msg' => 'User not found']);
+            }
 
-            $amount = (float) ($data['amount'] ?? 0);
-            $type = $data['type'] ?? 'win'; // win / lose / bet
+            $slot = $data['slot'] ?? [];
+            $txnType = $slot['txn_type'] ?? '';
+            $bet = (float) ($slot['bet_money'] ?? 0);
+            $win = (float) ($slot['win_money'] ?? 0);
 
-            // Adjust balance
-            // For Max API: amount is the change. win is positive, bet/lose is negative.
-            $user->balance += $amount;
+            if ($txnType === 'debit' || $txnType === 'debit_credit') {
+                if ($bet > 0) {
+                    if ($user->balance >= $bet) {
+                        $user->balance -= $bet;
+                        $user->rollover_deposit_current += $bet;
+                    } else {
+                        $realBet = $user->balance;
+                        $bonusBet = $bet - $realBet;
+                        $user->balance = 0;
+                        $user->bonus_balance -= $bonusBet;
+                        if ($user->bonus_balance < 0) {
+                            $user->bonus_balance = 0; // Previne ficar saldo negativo por erros de arredondamento
+                        }
+                        $user->rollover_deposit_current += $realBet;
+                        $user->rollover_bonus_current += $bonusBet;
+                    }
+                }
+            }
+
+            if ($txnType === 'credit' || $txnType === 'debit_credit') {
+                if ($win > 0) {
+                    $user->balance += $win;
+                }
+            }
+
             $user->save();
 
-            return response()->json([
+            $response = [
                 'status' => 1,
-                'balance' => (float) $user->balance
-            ]);
+                'user_balance' => (float) ($user->balance + $user->bonus_balance)
+            ];
+            \Log::info('MAX API Transaction: Success', $response);
+            return response()->json($response);
         }
 
         return response()->json(['status' => 1]);
